@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { authenticateToken, requireRole } from '../../middleware/auth';
+import { MysqlRateLimitStore } from '../../middleware/mysql-rate-limit-store';
+import { db } from '../../infrastructure/database/drizzle';
 import {
   accessEmployerVerificationDocumentController,
   listAdminEmployerVerificationDocumentsController,
@@ -11,11 +13,14 @@ import {
 } from './verification-documents.controller';
 
 export const employerVerificationDocumentsRouter = Router();
+const employerDocumentUploadStore = new MysqlRateLimitStore(db.query.bind(db), process.env.JWT_SECRET ?? '');
+employerDocumentUploadStore.prefix = 'mysql-employer-document-upload:';
 const employerDocumentUploadLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 20,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  store: employerDocumentUploadStore,
   message: { success: false, error: 'Document upload limit reached. Try again later.' },
 });
 const adminDocumentReviewLimit = rateLimit({

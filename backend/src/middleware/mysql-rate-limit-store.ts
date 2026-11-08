@@ -76,6 +76,6 @@ export class MysqlRateLimitStore implements Store {
   }
 
   private hashKey(key: string): string {
-    return createHmac('sha256', this.keySecret).update(key).digest('hex');
+    return createHmac('sha256', this.keySecret).update(`${this.prefix}${key}`).digest('hex');
   }
 }
