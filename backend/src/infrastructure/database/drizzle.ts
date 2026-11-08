@@ -145,12 +145,29 @@ class SkillBridgeDatabase {
 
   public async transaction<T>(callback: (tx: { query: QueryExecutor }) => Promise<T>): Promise<T> {
     await this.init();
+    let callbackError: unknown;
+
     try {
-      return await this.client!.transaction((transaction) => callback({
-        query: <Row = any>(statement: string, params: unknown[] = []) => runQuery<Row>(transaction, statement, params)
-      }));
+      return await this.client!.transaction(async (transaction) => {
+        try {
+          return await callback({
+            query: async <Row = any>(statement: string, params: unknown[] = []) => {
+              try {
+                return await runQuery<Row>(transaction, statement, params);
+              } catch (error) {
+                console.error('[SKILLBRIDGE DB] Transaction query failed.', getSafeDatabaseErrorMetadata(error));
+                throw new Error('Database operation failed.');
+              }
+            }
+          });
+        } catch (error) {
+          callbackError = error;
+          throw error;
+        }
+      });
     } catch (error) {
       console.error('[SKILLBRIDGE DB] Transaction failed.', getSafeDatabaseErrorMetadata(error));
+      if (error === callbackError) throw error;
       throw new Error('Database transaction failed.');
     }
   }
