@@ -1,0 +1,6 @@
+{
+  "name": "SKILLBRIDGE Ethiopia",
+  "description": "AI-Powered Platform for Skill-Based Job Matching, Skill-Gap Analysis, and Employer Performance Evaluation in Ethiopia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

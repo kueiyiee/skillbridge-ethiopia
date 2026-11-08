@@ -1,0 +1,9 @@
+:root {
+  --color-brand: #0ea5e9;
+  --color-brand-strong: #0284c7;
+  --color-surface: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-text: #0f172a;
+  --color-subtle: #475569;
+  --shadow-soft: 0 12px 40px rgba(15, 23, 42, 0.08);
+}

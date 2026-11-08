@@ -1,0 +1,5 @@
+ALTER TABLE `users`
+  ADD COLUMN `emailVerifiedAt` DATETIME(3) NULL;
+
+ALTER TABLE `users`
+  MODIFY COLUMN `emailVerified` BOOLEAN NOT NULL DEFAULT false;

@@ -1,0 +1,567 @@
+// Prisma Schema for SKILLBRIDGE Ethiopia
+// MySQL relational database schema with strict typing, indexes, and constraints
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  JOB_SEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RESUBMISSION_REQUIRED
+}
+
+enum EmployerVerificationDocumentCategory {
+  BUSINESS_REGISTRATION
+  TIN_CERTIFICATE
+  SUPPORTING
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SCREENING
+  SHORTLISTED
+  TECHNICAL_ASSESSMENT
+  INTERVIEW_SCHEDULED
+  OFFERED
+  HIRED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ApplicationMessageKind {
+  MESSAGE
+  APPLICATION_UPDATE
+  SHORTLISTED
+  INTERVIEW_INVITATION
+  INFORMATION_REQUEST
+  ASSESSMENT_REQUEST
+}
+
+enum ApplicationMessageActionStatus {
+  NONE
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+  HYBRID
+}
+
+model User {
+  id              String            @id @default(uuid())
+  email           String            @unique
+  username        String?           @unique
+  passwordHash    String
+  fullName        String
+  middleName      String?
+  phone           String?
+  role            Role              @default(JOB_SEEKER)
+  avatarUrl       String?
+  coverUrl        String?
+  dateOfBirth     DateTime?         @db.Date
+  gender          String?           @db.VarChar(80)
+  country         String?
+  region          String?
+  preferredLanguage String          @default("en")
+  profileVisibility String          @default("PRIVATE") @db.VarChar(16)
+  showPhone       Boolean           @default(false)
+  showEmail       Boolean           @default(false)
+  showLocation    Boolean           @default(false)
+  showGender      Boolean           @default(false)
+  candidateSearchable Boolean       @default(false)
+  employerDiscoverable Boolean      @default(false)
+  emailVerified   Boolean           @default(true)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
+
+  jobSeeker       JobSeekerProfile?
+  employer        EmployerProfile?
+  auditLogs       PlatformAuditLog[]
+  emailVerificationChallenge EmailVerificationChallenge?
+  reviewedVerificationDocuments EmployerVerificationDocument[] @relation("VerificationDocumentReviewer")
+  sentApplicationMessages ApplicationMessage[] @relation("ApplicationMessageSender")
+  receivedApplicationMessages ApplicationMessage[] @relation("ApplicationMessageRecipient")
+  employerMessageBatches EmployerMessageBatch[]
+
+  @@map("users")
+}
+
+model EmailVerificationChallenge {
+  id                    String   @id @db.VarChar(64)
+  userId                String?  @unique
+  user                  User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email                 String   @db.VarChar(191)
+  isDecoy               Boolean  @default(false)
+  tokenHash             String   @unique @db.Char(64)
+  codeHash              String   @db.Char(64)
+  expiresAt             DateTime @db.DateTime(3)
+  lastSentAt            DateTime @db.DateTime(3)
+  hourWindowStartedAt   DateTime @db.DateTime(3)
+  sendsInHour           Int      @default(1) @db.UnsignedTinyInt
+  dayWindowStartedAt    DateTime @db.DateTime(3)
+  sendsInDay            Int      @default(1) @db.UnsignedSmallInt
+  failedAttempts        Int      @default(0) @db.UnsignedTinyInt
+  attemptWindowStartedAt DateTime @db.DateTime(3)
+  lockedUntil           DateTime? @db.DateTime(3)
+  verifiedAt            DateTime? @db.DateTime(3)
+  createdAt             DateTime @default(now()) @db.DateTime(3)
+  updatedAt             DateTime @default(now()) @updatedAt @db.DateTime(3)
+
+  @@index([expiresAt])
+  @@map("email_verification_challenges")
+}
+
+model JobSeekerProfile {
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline          String?            // e.g. "Full-Stack Software Engineer"
+  bio               String?            @db.Text
+  experienceYears   Int                @default(0)
+  educationLevel    String?            // e.g. "B.Sc. in Computer Science"
+  institutionName   String?            // e.g. "Addis Ababa University"
+  city              String             @default("Addis Ababa")
+  subCity           String?
+  resumeUrl         String?
+  portfolioUrl      String?
+  githubUrl         String?
+  linkedinUrl       String?
+  desiredRole       String?
+  desiredSalaryETB  Int?
+  availableForWork  Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+
+  skills            JobSeekerSkill[]
+  applications      JobApplication[]
+  savedJobs         SavedJob[]
+  assessments       SkillAssessment[]
+  gapAnalyses       SkillGapResult[]
+  recommendations   Recommendation[]
+  evaluations       EmployerFeedback[]
+
+  @@map("job_seeker_profiles")
+}
+
+model EmployerProfile {
+  id                 String                      @id @default(uuid())
+  userId             String                      @unique
+  user               User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName        String
+  industry           String                      // e.g. "Financial Technology"
+  tinNumber          String?                     @unique
+  businessLicenseNo  String?
+  city               String                      @default("Addis Ababa")
+  address            String?
+  website            String?
+  employeeRange      String                      @default("11-50")
+  companyOverview    String?                     @db.Text
+  logoUrl            String?
+  isApproved         Boolean                     @default(false)
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @default(now()) @updatedAt
+
+  verificationRecords EmployerVerificationRecord[]
+  verificationDocuments EmployerVerificationDocument[]
+  jobs               Job[]
+  evaluations        EmployerFeedback[]
+
+  @@map("employer_profiles")
+}
+
+model EmployerVerificationRecord {
+  id                 String             @id @default(uuid())
+  employerId         String
+  employer           EmployerProfile    @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  tinNumber          String
+  businessLicenseNo  String
+  documentUrl        String?
+  status             VerificationStatus @default(PENDING)
+  reviewerAdminId    String?
+  reviewNotes        String?            @db.Text
+  disclaimer         String             @default("Platform verification represents internal review of submitted business credentials and does not constitute a government or legal guarantee.")
+  reviewedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @default(now()) @updatedAt
+  documents          EmployerVerificationDocument[]
+
+  @@index([employerId])
+  @@index([status])
+  @@map("employer_verification_records")
+}
+
+model EmployerVerificationDocument {
+  id                 String                    @id @db.VarChar(64)
+  employerId         String
+  employer           EmployerProfile           @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  verificationRecordId String
+  verificationRecord EmployerVerificationRecord @relation(fields: [verificationRecordId], references: [id], onDelete: Cascade)
+  category           EmployerVerificationDocumentCategory
+  originalFilename   String                    @db.VarChar(255)
+  storageKey         String                    @unique @db.VarChar(80)
+  contentType        String                    @db.VarChar(100)
+  sizeBytes          Int                       @db.UnsignedInt
+  status             VerificationStatus        @default(PENDING)
+  reviewerAdminId    String?
+  reviewer           User?                     @relation("VerificationDocumentReviewer", fields: [reviewerAdminId], references: [id], onDelete: SetNull)
+  reviewNotes        String?                   @db.Text
+  submittedAt        DateTime                  @default(now()) @db.DateTime(3)
+  reviewedAt         DateTime?                 @db.DateTime(3)
+  archivedAt         DateTime?                 @db.DateTime(3)
+  createdAt          DateTime                  @default(now()) @db.DateTime(3)
+  updatedAt          DateTime                  @default(now()) @db.DateTime(3)
+
+  @@index([employerId, submittedAt])
+  @@index([verificationRecordId])
+  @@index([status])
+  @@map("employer_verification_documents")
+}
+
+model Skill {
+  id               String                 @id @default(uuid())
+  name             String                 @unique
+  category         String                 // e.g. "Databases", "Frontend", "Backend"
+  description      String?                @db.Text
+  demandRating     Int                    @default(3) // 1 to 5 scale
+  createdAt        DateTime               @default(now())
+
+  seekerSkills     JobSeekerSkill[]
+  jobRequirements  JobSkillRequirement[]
+  assessments      SkillAssessment[]
+  assessmentQuestions SkillAssessmentQuestion[]
+
+  @@map("skills")
+}
+
+model JobSeekerSkill {
+  id                 String           @id @default(uuid())
+  jobSeekerId        String
+  jobSeeker          JobSeekerProfile @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  skillId            String
+  skill              Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  proficiencyLevel   SkillLevel       @default(INTERMEDIATE)
+  yearsExperience    Float            @default(1.0)
+  isVerified         Boolean          @default(false)
+  verifiedMethod     String?
+  verifiedAt         DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @default(now()) @updatedAt
+
+  @@unique([jobSeekerId, skillId])
+  @@index([jobSeekerId])
+  @@index([skillId])
+  @@map("job_seeker_skills")
+}
+
+model Job {
+  id                 String                @id @default(uuid())
+  employerId         String
+  employer           EmployerProfile       @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  title              String
+  department         String?
+  jobType            JobType               @default(FULL_TIME)
+  city               String                @default("Addis Ababa")
+  workplaceType      String                @default("Hybrid")
+  summary            String                @db.Text
+  responsibilities   String                @db.Text // Stored as formatted JSON or text
+  qualifications     String                @db.Text // Stored as formatted JSON or text
+  minExperienceYears Int                   @default(1)
+  salaryMinETB       Int?
+  salaryMaxETB       Int?
+  isSalaryNegotiable Boolean               @default(true)
+  status             JobStatus             @default(ACTIVE)
+  deadline           DateTime?
+  viewsCount         Int                   @default(0)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @default(now()) @updatedAt
+
+  skillRequirements  JobSkillRequirement[]
+  applications       JobApplication[]
+  savedBy            SavedJob[]
+  gapAnalyses        SkillGapResult[]
+  recommendations    Recommendation[]
+  evaluations        EmployerFeedback[]
+
+  @@index([employerId])
+  @@index([status])
+  @@index([city])
+  @@map("jobs")
+}
+
+model JobSkillRequirement {
+  id                 String       @id @default(uuid())
+  jobId              String
+  job                Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skillId            String
+  skill              Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  isMandatory        Boolean      @default(true)
+  weight             Int          @default(3) // 1-5 scale
+  requiredLevel      SkillLevel   @default(INTERMEDIATE)
+
+  @@unique([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+  @@map("job_skill_requirements")
+}
+
+model JobApplication {
+  id                 String            @id @default(uuid())
+  jobId              String
+  job                Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobSeekerId        String
+  jobSeeker          JobSeekerProfile  @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  coverNote          String?           @db.Text
+  resumeSnapshotUrl  String?
+  status             ApplicationStatus @default(APPLIED)
+  matchScore         Int               @default(0)
+  statusNotes        String?           @db.Text
+  appliedAt          DateTime          @default(now())
+  updatedAt          DateTime          @default(now()) @updatedAt
+  messages           ApplicationMessage[]
+
+  @@unique([jobId, jobSeekerId])
+  @@index([jobSeekerId])
+  @@index([jobId])
+  @@index([status])
+  @@map("job_applications")
+}
+
+model ApplicationMessage {
+  id              String                         @id @default(uuid())
+  applicationId   String
+  application     JobApplication                 @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  senderUserId    String
+  sender          User                           @relation("ApplicationMessageSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+  recipientUserId String
+  recipient       User                           @relation("ApplicationMessageRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  kind            ApplicationMessageKind         @default(MESSAGE)
+  subject         String?
+  body            String                         @db.Text
+  dueAt           DateTime?                      @db.DateTime(3)
+  actionStatus    ApplicationMessageActionStatus @default(NONE)
+  readAt          DateTime?                      @db.DateTime(3)
+  createdAt       DateTime                       @default(now()) @db.DateTime(3)
+  deliveryBatchId String?
+  deliveryBatch   EmployerMessageBatch?          @relation(fields: [deliveryBatchId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, createdAt])
+  @@index([recipientUserId, readAt, createdAt])
+  @@index([senderUserId, createdAt])
+  @@unique([deliveryBatchId, applicationId])
+  @@map("application_messages")
+}
+
+model EmployerMessageBatch {
+  id              String              @id
+  senderUserId    String
+  sender          User                @relation(fields: [senderUserId], references: [id], onDelete: Cascade)
+  payloadHash     String              @db.Char(64)
+  recipientCount  Int                 @default(0)
+  completedAt     DateTime?           @db.DateTime(3)
+  createdAt       DateTime            @default(now()) @db.DateTime(3)
+  messages        ApplicationMessage[]
+
+  @@index([senderUserId, createdAt])
+  @@map("employer_message_batches")
+}
+
+model SavedJob {
+  id                 String           @id @default(uuid())
+  jobSeekerId        String
+  jobSeeker          JobSeekerProfile @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobId              String
+  job                Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  savedAt            DateTime         @default(now())
+
+  @@unique([jobSeekerId, jobId])
+  @@index([jobSeekerId])
+  @@map("saved_jobs")
+}
+
+model SkillAssessment {
+  id                 String           @id @default(uuid())
+  jobSeekerId        String
+  jobSeeker          JobSeekerProfile @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  skillId            String
+  skill              Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  scorePercentage    Float
+  levelAchieved      SkillLevel
+  questionsCount     Int              @default(10)
+  completedAt        DateTime         @default(now())
+  responses          SkillAssessmentResponse[]
+
+  @@index([jobSeekerId])
+  @@index([skillId])
+  @@map("skill_assessments")
+}
+
+model SkillAssessmentQuestion {
+  id               String                      @id
+  skillId          String
+  skill            Skill                       @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  questionKey      String
+  prompt           String                      @db.Text
+  optionsJson      Json
+  correctOption    Int                         @db.UnsignedTinyInt
+  questionOrder    Int
+  isActive         Boolean                     @default(true)
+  createdAt        DateTime                    @default(now()) @db.DateTime(3)
+  responses        SkillAssessmentResponse[]
+
+  @@unique([skillId, questionKey])
+  @@index([skillId, isActive, questionOrder])
+  @@map("skill_assessment_questions")
+}
+
+model SkillAssessmentResponse {
+  id             String                  @id
+  assessmentId   String
+  assessment     SkillAssessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       SkillAssessmentQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption Int                     @db.UnsignedTinyInt
+  isCorrect      Boolean
+  createdAt      DateTime                @default(now()) @db.DateTime(3)
+
+  @@unique([assessmentId, questionId])
+  @@index([questionId])
+  @@map("skill_assessment_responses")
+}
+
+model SkillGapResult {
+  id                 String           @id @default(uuid())
+  jobSeekerId        String
+  jobSeeker          JobSeekerProfile @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobId              String
+  job                Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  matchPercentage    Float
+  matchedSkillsJson  String           @db.Text // JSON string of matched competencies
+  missingSkillsJson  String           @db.Text // JSON string of gap competencies
+  aiRoadmapJson      String?          @db.Text // JSON string of AI learning path
+  calculatedAt       DateTime         @default(now())
+
+  @@index([jobSeekerId])
+  @@index([jobId])
+  @@map("skill_gap_results")
+}
+
+model Recommendation {
+  id                 String           @id @default(uuid())
+  jobSeekerId        String
+  jobSeeker          JobSeekerProfile @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobId              String
+  job                Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  score              Float            // 0.0 - 1.0 ranking
+  reasoning          String                 @db.Text
+  createdAt          DateTime         @default(now())
+
+  @@unique([jobSeekerId, jobId])
+  @@index([jobSeekerId])
+  @@map("recommendations")
+}
+
+model EmployerFeedback {
+  id                      String           @id @default(uuid())
+  employerId              String
+  employer                EmployerProfile  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  jobSeekerId             String
+  jobSeeker               JobSeekerProfile @relation(fields: [jobSeekerId], references: [id], onDelete: Cascade)
+  jobId                   String
+  job                     Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  period                  String           // e.g. "Probation Review (90 Days)"
+  technicalScore          Float            // 1.0 - 5.0
+  deliveryScore           Float            // 1.0 - 5.0
+  communicationScore      Float            // 1.0 - 5.0
+  adaptabilityScore       Float            // 1.0 - 5.0
+  overallScore            Float            // 1.0 - 5.0
+  strengths               String           @db.Text
+  growthAreas             String           @db.Text
+  retentionRecommendation String
+  createdAt               DateTime         @default(now())
+
+  @@index([employerId])
+  @@index([jobSeekerId])
+  @@map("employer_feedbacks")
+}
+
+model PlatformAuditLog {
+  id                 String           @id @default(uuid())
+  userId             String?
+  user               User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action             String           // e.g. "USER_REGISTERED", "JOB_CREATED", "VERIFICATION_APPROVED"
+  entityType         String
+  entityId           String?
+  details            String?          @db.Text
+  ipAddress          String?
+  createdAt          DateTime         @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("platform_audit_logs")
+}
+
+model AiNexusConversation {
+  id                 String           @id @default(uuid())
+  userId             String
+  role               Role
+  title              String           @default("New Conversation")
+  contextRoute       String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @default(now()) @updatedAt
+
+  messages           AiNexusMessage[]
+
+  @@index([userId])
+  @@index([role])
+  @@index([updatedAt])
+  @@map("ai_nexus_conversations")
+}
+
+model AiNexusMessage {
+  id                 String               @id @default(uuid())
+  conversationId     String
+  conversation       AiNexusConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender             String               // "user" | "assistant" | "system"
+  content            String               @db.Text
+  isAiGenerated      Boolean              @default(true)
+  metadata           String?              @db.Text // JSON string for rich structured cards
+  createdAt          DateTime             @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("ai_nexus_messages")
+}

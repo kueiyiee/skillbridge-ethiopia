@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SKILLBRIDGE brand mark">
+  <defs>
+    <linearGradient id="sb-bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="sb-bridge" x1="0%" x2="100%" y1="0%" y2="0%">
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#sb-bg)"/>
+  <path d="M24 88c13-18 26-29 40-29s27 11 40 29" fill="none" stroke="url(#sb-bridge)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M36 78h56" stroke="#e0f2fe" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <path d="M32 52h64" stroke="#e0f2fe" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+  <path d="M46 36h36" stroke="#e0f2fe" stroke-width="8" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="64" cy="36" r="8" fill="#f8fbff"/>
+  <path d="M64 22v26" stroke="#f8fbff" stroke-width="8" stroke-linecap="round"/>
+</svg>

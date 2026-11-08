@@ -1,0 +1,40 @@
+# Apache / cPanel .htaccess configuration for SKILLBRIDGE
+# Place this in public_html or the application root directory
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. Allow Direct Access to Static Assets & Built Files
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Passenger Routing (Handled automatically by CloudLinux Passenger if configured)
+  # If running standalone Node.js behind Apache reverse proxy:
+  # RewriteRule ^api/(.*)$ http://127.0.0.1:3000/api/$1 [P,L]
+  # RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Deny access to sensitive files
+<FilesMatch "^\.(env|git|lock)">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+<FilesMatch "(package\.json|package-lock\.json|tsconfig\.json)">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
