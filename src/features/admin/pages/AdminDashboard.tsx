@@ -4,6 +4,7 @@ import { useAuth } from '@/src/app/providers/AuthContext';
 import type { SystemStatus } from '@/shared/types';
 import { api, type AdminEmployerVerificationSummary, type AdminPageResult, type AdminReport, type AdminReportFormat, type AdminReportType, type AdminUserSummary, type EmployerVerificationDocument, type EmployerVerificationHistoryItem } from '@/src/services/api-client';
 import { BrandLogo } from '@/src/components/shared/BrandLogo';
+import { DashboardMetricCard, DashboardPageHeader } from '@/src/components/shared/DashboardPrimitives';
 import { ThemeSwitcher } from '@/src/components/navigation/ThemeSwitcher';
 import { AdminManagement } from '../components/AdminManagement';
 import { 
@@ -979,17 +980,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           { label: 'Active Jobs', value: metrics ? metrics.totalJobs ?? 0 : loadErrors.metrics ? '—' : loading ? '…' : '—', detail: metrics ? `${metrics.draftJobs} drafts · ${metrics.closedJobs} closed` : 'Published and eligible', Icon: Briefcase, accent: 'text-sky-700 dark:text-sky-300' },
           { label: 'Applications', value: metrics ? metrics.totalApplications ?? 0 : loadErrors.metrics ? '—' : loading ? '…' : '—', detail: metrics ? `${metrics.applicationsAwaitingReview} pending review` : 'Submitted applications', Icon: FileText, accent: 'text-indigo-700 dark:text-indigo-300' },
         ].map(({ label, value, detail, Icon, accent }) => (
-          <article key={label} className="sb-dashboard-metric group flex min-h-[112px] items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-md transition-colors hover:border-cyan-500/50 dark:border-slate-700/70 dark:bg-slate-900/55 dark:hover:border-cyan-700/70 sm:px-5">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-slate-950 dark:text-white">{value}</p>
-              <p className="mt-2 truncate text-[11px] text-slate-500 dark:text-slate-400">{detail}</p>
-            </div>
-            <Icon className={`h-5 w-5 shrink-0 ${accent}`} aria-hidden="true" />
-          </article>
+          <DashboardMetricCard
+            key={label}
+            label={label}
+            value={value}
+            detail={detail}
+            icon={Icon}
+            iconClassName={accent}
+            className="border-white/70 bg-white/70 px-4 py-3 backdrop-blur-md hover:border-cyan-500/50 dark:border-slate-700/70 dark:bg-slate-900/55 dark:hover:border-cyan-700/70 sm:px-5"
+          />
         ))}
       </div>}
-
       {/* Selected section content */}
 
       {activeTab === 'jobs' && (
