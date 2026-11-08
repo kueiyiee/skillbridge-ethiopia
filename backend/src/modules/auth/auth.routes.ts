@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { authenticateToken, optionalAuth } from '../../middleware/auth';
+import { MysqlRateLimitStore } from '../../middleware/mysql-rate-limit-store';
+import { db } from '../../infrastructure/database/drizzle';
 import {
   changePasswordController,
   currentAccountController,
@@ -21,11 +23,20 @@ import {
 } from './password-reset.controller';
 
 const router = Router();
+const rateLimitSecret = process.env.JWT_SECRET ?? '';
+const passwordChangeStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+passwordChangeStore.prefix = 'mysql-password-change:';
+const emailVerificationStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+emailVerificationStore.prefix = 'mysql-email-verification:';
+const emailCodeAttemptStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+emailCodeAttemptStore.prefix = 'mysql-email-verification-attempt:';
+
 const passwordChangeLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  store: passwordChangeStore,
   message: { success: false, error: 'Too many password change attempts. Please try again later.' },
 });
 const emailVerificationLimit = rateLimit({
@@ -33,6 +44,7 @@ const emailVerificationLimit = rateLimit({
   limit: 5,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  store: emailVerificationStore,
   message: { success: false, error: 'Too many verification code requests. Please try again later.' }
 });
 const emailCodeAttemptLimit = rateLimit({
@@ -40,6 +52,7 @@ const emailCodeAttemptLimit = rateLimit({
   limit: 12,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
+  store: emailCodeAttemptStore,
   message: { success: false, error: 'Too many verification attempts. Please try again later.' }
 });
 
