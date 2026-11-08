@@ -59,9 +59,7 @@ Vercel's SPA rewrite keeps direct navigation and refreshes on client-side routes
 
 ## File uploads and persistent storage
 
-The current profile-image implementation writes files to the API server's local filesystem. Render's default filesystem is ephemeral, so uploaded profile images can disappear after a restart or redeploy. Before enabling production profile-image uploads, attach a persistent disk to the Render service and set `PROFILE_MEDIA_DIRECTORY` to its mount path, or migrate image storage to a durable object-storage provider. Do not assume the Render container filesystem is permanent.
-
-Employer verification documents use their own storage implementation; confirm its configured storage backend and persistence before production use.
+Both profile images and employer verification documents are written to the API server's local filesystem. Render's default filesystem is ephemeral, so either kind of upload can disappear after a restart or redeploy. Before enabling these uploads in production, attach a persistent disk to the Render service and set `PROFILE_MEDIA_DIRECTORY` and `EMPLOYER_VERIFICATION_DOCUMENT_DIRECTORY` to directories on that disk, or migrate both features to durable object storage. Do not assume the Render container filesystem is permanent. A persistent disk is a paid-plan consideration; if you remain on the free instance, treat file uploads as non-durable and do not use it for real employer verification evidence.
 
 ## Local development and cPanel compatibility
 
