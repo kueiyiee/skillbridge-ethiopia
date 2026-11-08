@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: skillbridge-api
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: .
+    buildCommand: npm ci && npm run build:server
+    startCommand: npm start
+    healthCheckPath: /api/health/ready
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: SERVE_FRONTEND
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_OTP_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: EMAIL_VERIFICATION_URL
+        sync: false
+      - key: OTP_FROM_EMAIL
+        sync: false
