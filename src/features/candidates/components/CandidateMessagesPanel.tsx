@@ -87,6 +87,28 @@ export const CandidateMessagesPanel: React.FC<CandidateMessagesPanelProps> = ({ 
     return () => { active = false; };
   }, [selectedApplicationId, refreshThreads]);
 
+  useEffect(() => {
+    if (!selectedApplicationId) return;
+    let active = true;
+    const refreshConversation = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const [nextConversation] = await Promise.all([
+          api.getCandidateConversation(selectedApplicationId),
+          refreshThreads(),
+        ]);
+        if (active) setConversation(nextConversation);
+      } catch {
+        // Keep the last successfully loaded conversation visible during transient network failures.
+      }
+    };
+    const interval = window.setInterval(() => { void refreshConversation(); }, 15000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [selectedApplicationId, refreshThreads]);
+
   const submitReply = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedApplicationId || !reply.trim()) return;

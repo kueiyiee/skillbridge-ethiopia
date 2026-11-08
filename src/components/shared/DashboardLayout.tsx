@@ -5,6 +5,7 @@ import {
   type JobSeekerNavigationItem,
 } from '@/src/components/navigation/jobSeekerNavigation';
 import { BrandLogo } from './BrandLogo';
+import { DashboardNotificationCenter } from './DashboardNotificationCenter';
 
 const MIN_SIDEBAR_WIDTH = 208;
 const MIN_MAIN_CONTENT_WIDTH = 320;
@@ -211,6 +212,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </aside>
 
         <main className="min-w-0 space-y-4">
+          <div className="flex justify-end"><DashboardNotificationCenter role="JOB_SEEKER" onOpen={() => onTabChange('messages')} /></div>
           {heroBanner}
           <nav className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:hidden" aria-label="Career workspace navigation">
             {jobSeekerWorkspaceNavigation.map((item) => {

@@ -5,6 +5,7 @@ import type { SystemStatus } from '@/shared/types';
 import { api, type AdminEmployerVerificationSummary, type AdminPageResult, type AdminReport, type AdminReportFormat, type AdminReportType, type AdminUserSummary, type EmployerVerificationDocument, type EmployerVerificationHistoryItem } from '@/src/services/api-client';
 import { BrandLogo } from '@/src/components/shared/BrandLogo';
 import { DashboardMetricCard, DashboardPageHeader } from '@/src/components/shared/DashboardPrimitives';
+import { DashboardNotificationCenter } from '@/src/components/shared/DashboardNotificationCenter';
 import { ThemeSwitcher } from '@/src/components/navigation/ThemeSwitcher';
 import { AdminManagement } from '../components/AdminManagement';
 import { 
@@ -914,6 +915,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <DashboardNotificationCenter role="ADMIN" onOpen={() => setSearchParams({ section: 'audit' })} />
             <ThemeSwitcher />
           </div>
         </div>
