@@ -25,15 +25,15 @@ export async function createApp() {
   app.use(express.json({ limit: '8mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  const loginRateLimitStore = new MysqlRateLimitStore(
-    db.query.bind(db),
-    process.env.JWT_SECRET ?? '',
-  );
-  const passwordRecoveryRateLimitStore = new MysqlRateLimitStore(
-    db.query.bind(db),
-    process.env.JWT_SECRET ?? '',
-  );
+  const rateLimitSecret = process.env.JWT_SECRET ?? '';
+  const loginRateLimitStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+  const passwordRecoveryRateLimitStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
   passwordRecoveryRateLimitStore.prefix = 'mysql-password-recovery:';
+  const registrationRateLimitStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+  registrationRateLimitStore.prefix = 'mysql-registration:';
+  const aiRateLimitStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+  aiRateLimitStore.prefix = 'mysql-ai:';
+
   const passwordRecoveryIpLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 20,
@@ -60,6 +60,7 @@ export async function createApp() {
     limit: 8,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
+    store: registrationRateLimitStore,
     message: { success: false, error: 'Too many registration attempts. Please try again later.' }
   }));
   app.use('/api/ai', rateLimit({
@@ -67,6 +68,7 @@ export async function createApp() {
     limit: 30,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
+    store: aiRateLimitStore,
     message: { success: false, error: 'AI request limit reached. Please try again later.' }
   }));
 
