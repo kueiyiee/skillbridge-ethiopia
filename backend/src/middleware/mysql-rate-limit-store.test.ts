@@ -105,3 +105,22 @@ test('stores a keyed hash instead of the client IP', async () => {
     store.shutdown();
   }
 });
+
+test('keeps counters isolated by policy namespace', async () => {
+  const shared = createSharedQuery();
+  const loginStore = new MysqlRateLimitStore(shared.query, 'test-secret');
+  const registrationStore = new MysqlRateLimitStore(shared.query, 'test-secret');
+  registrationStore.prefix = 'mysql-registration:';
+  loginStore.init(options);
+  registrationStore.init(options);
+
+  try {
+    assert.equal((await loginStore.increment('203.0.113.4')).totalHits, 1);
+    assert.equal((await registrationStore.increment('203.0.113.4')).totalHits, 1);
+    assert.equal((await loginStore.increment('203.0.113.4')).totalHits, 2);
+    assert.equal((await registrationStore.increment('203.0.113.4')).totalHits, 2);
+  } finally {
+    loginStore.shutdown();
+    registrationStore.shutdown();
+  }
+});
