@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, BriefcaseBusiness, ChevronRight, Clock3, ShieldCheck } from 'lucide-react';
+import { Bell, Briefcase, ChevronRight, Clock, ShieldCheck } from 'lucide-react';
 import { api, type ApplicationMessageThread } from '@/src/services/api-client';
 
 type NotificationRole = 'JOB_SEEKER' | 'EMPLOYER' | 'ADMIN';
@@ -140,12 +140,12 @@ export const DashboardNotificationCenter: React.FC<DashboardNotificationCenterPr
                       <li key={thread.applicationId}>
                         <button type="button" onClick={() => { setIsOpen(false); onOpen(); }} className="flex min-h-[76px] w-full gap-3 px-4 py-3 text-left transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500 dark:hover:bg-slate-900">
                           <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${unread ? 'bg-cyan-100 text-cyan-900 dark:bg-cyan-950 dark:text-cyan-200' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'}`}>
-                            <BriefcaseBusiness className="h-4 w-4" aria-hidden="true" />
+                            <Briefcase className="h-4 w-4" aria-hidden="true" />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center justify-between gap-2">
                               <span className="truncate text-xs font-bold text-slate-900 dark:text-white">{otherParty}</span>
-                              <span className="inline-flex shrink-0 items-center gap-1 text-[10px] text-slate-500"><Clock3 className="h-3 w-3" />{relativeTime(thread.lastMessageAt)}</span>
+                              <span className="inline-flex shrink-0 items-center gap-1 text-[10px] text-slate-500"><Clock className="h-3 w-3" />{relativeTime(thread.lastMessageAt)}</span>
                             </span>
                             <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">{thread.jobTitle}</span>
                             <span className="mt-1 block truncate text-xs text-slate-700 dark:text-slate-300">{thread.lastMessage || 'Application activity updated'}</span>
