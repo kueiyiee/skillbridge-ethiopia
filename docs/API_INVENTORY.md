@@ -79,7 +79,7 @@ Conversations are scoped to an existing job application. Employers must be verif
 | `POST /api/employers/me/verify` | `EMPLOYER` | Validates TIN/license input; records verification, updates employer profile, and writes audit row transactionally. |
 | `GET /api/employers/me/applications` | Verified `EMPLOYER` | Lists applications only for jobs owned by the caller; candidate profile and contact fields are filtered by profile visibility and contact preferences. |
 | `PATCH /api/employers/me/applications/:id/status` | Verified `EMPLOYER`, application owner | Applies only permitted forward transitions (`APPLIED`/`SCREENING` → review stages; `OFFERED` → `HIRED` or `REJECTED`; terminal statuses cannot transition). Updates the application, writes the candidate notification, and records an audit event in one transaction. |
-| `GET /api/employers/me/analytics` | Verified `EMPLOYER` | Computes metrics from the caller's jobs and applications. No other employer's records are selected. |
+| `GET /api/employers/me/analytics` | Verified `EMPLOYER` | Computes metrics from the caller's jobs and applications. No other employer's records are selected. |\n| `GET /api/employers/me/verification/documents` | `EMPLOYER` | Lists the caller's documents for the latest active verification record; response is not cacheable. |\n| `POST /api/employers/me/verification/documents` | `EMPLOYER`; 20/hour | Accepts a base64 PDF/JPG/PNG up to 4 MB, checks the file signature against the declared type, writes to private storage, and records an audit event. The upload rate limit is stored in MySQL and shared across workers. |\n| `GET /api/admin/verifications/employers/:employerId/documents` | `ADMIN` | Lists verification documents for the selected employer without exposing storage paths. |\n| `GET /api/admin/verifications/employers/:employerId/history` | `ADMIN` | Lists the employer's verification decision history. |\n| `PATCH /api/admin/verifications/documents/:documentId` | `ADMIN`; rate-limited | Records an approval, rejection, or resubmission request with reviewer and audit metadata. |\n| `GET /api/admin/verifications/employers/:employerId/documents/:documentId` | `ADMIN` | Streams a private document with no-store, nosniff, and sandbox CSP headers; access outcome is audited. |
 
 Bulk messaging supports one candidate, selected candidates, or applicants to one employer-owned job through a common application-ID API. Each recipient receives a separate application-linked message. Organization-wide announcements are not supported because the current data model has no candidate opt-in record.
 
@@ -125,10 +125,13 @@ All `/api/admin/*` routes require a valid token with `ADMIN` role.
 
 ## Known API gaps and limitations
 
-- The legacy schema reference describes 17 models and the checked-in baseline creates 17 application tables. Actual hosted columns, constraints, enums, and indexes remain unverified without cPanel connection/catalog results.
-- `SkillAssessment` has no assessment API or frontend workflow.
+- The legacy schema reference and checked-in MySQL baseline do not prove the exact schema currently installed on a hosting account. Hosted columns, constraints, enums, indexes, migration ledger, and data integrity remain unverified until a production-safe read-only inspection is completed.
+- `SkillAssessment` has no public assessment API or complete frontend assessment workflow.
 - Recommendations and learning paths are computed live; the `Recommendation` table is not populated by those endpoints. Skill-gap results are persisted when an application is submitted, not for every analysis request.
-- There is no backend job-edit/deadline endpoint, persisted session revocation UI, or persistent rate-limit store. Rate limits are per process and may not coordinate across multiple Node workers.
-- `ML_SERVICE_URL` is configuration only; no route currently calls the ML service. Matching uses the deterministic TypeScript calculation.
-- Login/registration and Drizzle persistence have isolated SQL/business tests but no automated HTTP integration tests against the hosted database. The cPanel database was not contacted from this workspace.
-- Employer submission accepts a legacy `documentUrl` field, but no protected file-storage/access workflow exists; the admin API deliberately omits that value until secure document delivery is implemented.
+- There is no backend job-edit/deadline endpoint, persisted session-revocation UI, or automated browser E2E suite. The files under `frontend/e2e/` are placeholder blueprint tests and are not run by CI.
+- Login, password recovery, registration, AI requests, password changes, email-verification requests/attempts, and employer document uploads use the shared MySQL rate-limit table. Some feature-specific limits elsewhere still use the default in-memory store and therefore are per process.
+- Verification document upload validates file size, base64 encoding, file signature, and declared content type, and stores files privately. **Antivirus/malware scanning is not implemented**; do not describe file-signature validation as malware protection.
+- No strict application-wide Content Security Policy is configured. Add CSP only after inventorying inline scripts, Vite/production asset origins, fonts, and any required provider endpoints; deploy in report-only mode before enforcement.
+- The Python `ml_service/` is not called by the current API. Matching uses the deterministic TypeScript implementation.
+- Production cPanel connectivity, reverse-proxy behavior, TLS/HSTS, cookie behavior, file-storage permissions, backup/restore, monitoring, and live smoke tests have not been verified from CI.
+- No production data migration or live production deployment has been performed by this repository audit.
