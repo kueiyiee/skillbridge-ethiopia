@@ -11,7 +11,7 @@ SKILLBRIDGE Ethiopia is a skills-first employment platform connecting Ethiopian 
 - Support employer verification, skill assessments, explainable job matching, and career guidance.
 - Provide role-based experiences for Job Seekers, Employers, and Administrators, including applications, messaging, and platform management.
 
-The public website is [www.kueiyiee.tech](https://www.kueiyiee.tech).
+The public website is https://skillbridge-ethiopia-pi.vercel.app/
 
 ## Stack
 
