@@ -9,6 +9,7 @@ import {
   type CandidateSkillAssessmentResult,
 } from '@/src/services/api-client';
 import { DashboardLayout } from '@/src/components/shared/DashboardLayout';
+import { DashboardMetricCard } from '@/src/components/shared/DashboardPrimitives';
 import { CareerParticleField } from '@/src/components/shared/CareerParticleField';
 import { CandidateMessagesPanel } from '../components/CandidateMessagesPanel';
 import { 
@@ -510,32 +511,25 @@ export const JobSeekerDashboard: React.FC<JobSeekerDashboardProps> = ({ onNaviga
               { label: 'Saved jobs', value: loadErrors.includes('saved jobs') ? '—' : savedJobs.length, context: loadErrors.includes('saved jobs') ? 'Unable to load saved jobs' : savedJobs.length ? 'Keep opportunities close' : 'Save roles to revisit', tab: 'saved', icon: Bookmark },
               { label: 'Profile completion', value: profileCompletion === null ? '—' : `${profileCompletion}%`, context: profileCompletion === null ? 'Profile unavailable' : missingProfileRequirements.length ? `${missingProfileRequirements.length} details to complete` : 'Key details are in place', tab: 'completion', icon: CheckCircle2 },
             ].map(({ label, value, context, tab, icon: Icon }) => (
-              <button
+              <DashboardMetricCard
                 key={tab}
-                type="button"
+                label={label}
+                value={loading && tab !== 'completion'
+                  ? <span className="block h-7 w-12 animate-pulse rounded bg-slate-200 dark:bg-slate-700" aria-label={`Loading ${label.toLowerCase()}`} />
+                  : value}
+                detail={tab === 'completion'
+                  ? profileCompletion === null
+                    ? 'Profile unavailable'
+                    : missingProfileRequirements.length
+                      ? `Next: ${missingProfileRequirements.slice(0, 2).map((item) => item.label.toLowerCase()).join(' and ')}`
+                      : 'Key details are in place'
+                  : loading ? 'Loading your information…' : context}
+                icon={Icon}
                 onClick={() => tab === 'completion' ? setIsEditProfileOpen(true) : handleTabChange(tab)}
-                aria-label={tab === 'completion' ? `Profile completion ${value}. Complete your profile` : `${label}: ${value}`}
-                className="sb-dashboard-metric group min-h-[112px] rounded-2xl border border-slate-200/80 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-cyan-900 sm:p-4"
-              >
-                <span className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {label}<span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-50 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300"><Icon className="h-4 w-4" aria-hidden="true" /></span>
-                </span>
-                {loading && tab !== 'completion' ? (
-                  <span className="mt-3 block h-7 w-12 animate-pulse rounded bg-slate-200 dark:bg-slate-700" aria-label={`Loading ${label.toLowerCase()}`} />
-                ) : (
-                  <span className="mt-2 block text-3xl font-bold leading-none tracking-tight tabular-nums text-slate-950 dark:text-white">{value}</span>
-                )}
-                {tab === 'completion' ? (
-                  <>
-                    {profileCompletion !== null && <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-label="Profile completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={profileCompletion}>
-                      <div className="h-full rounded-full bg-cyan-700 transition-[width] dark:bg-cyan-400" style={{ width: `${profileCompletion}%` }} />
-                    </div>}
-                    <p className="mt-2 truncate text-xs leading-4 text-slate-600 dark:text-slate-400">
-                      {profileCompletion === null ? 'Profile unavailable' : missingProfileRequirements.length ? `Next: ${missingProfileRequirements.slice(0, 2).map((item) => item.label.toLowerCase()).join(' and ')}` : 'Key details are in place'}
-                    </p>
-                  </>
-                ) : <p className="mt-2 truncate text-xs leading-4 text-slate-600 dark:text-slate-400">{loading ? 'Loading your information…' : context}</p>}
-              </button>
+                ariaLabel={tab === 'completion' ? `Profile completion ${value}. Complete your profile` : `${label}: ${value}`}
+                progress={tab === 'completion' && profileCompletion !== null ? { value: profileCompletion, label: 'Profile completion' } : undefined}
+                className="transition-all hover:-translate-y-0.5 sm:p-4"
+              />
             ))}
           </section>}
 
