@@ -90,13 +90,15 @@ export async function createApp() {
     });
   });
 
-  if (isProduction) {
+  // cPanel/Passenger can continue serving the bundled SPA. Render runs this
+  // same API process separately and disables static hosting with SERVE_FRONTEND=false.
+  if (isProduction && process.env.SERVE_FRONTEND !== 'false') {
     const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
-  } else {
+  } else if (!isProduction) {
     const { createServer } = await import('vite');
     const vite = await createServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
