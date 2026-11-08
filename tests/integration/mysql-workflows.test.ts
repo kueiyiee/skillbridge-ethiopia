@@ -106,7 +106,7 @@ async function assertTest(category: string, name: string, fn: () => Promise<void
     console.log(`  [PASS] ${name}`);
   } catch (err: any) {
     results.push({ category, name, passed: false, error: err.message });
-    console.error(`  [FAIL] ${name}: ${err.message}`);
+    console.error(`  [FAIL] ${name}: ${err instanceof Error ? err.stack ?? err.message : String(err)}`);
   }
 }
 
@@ -544,16 +544,18 @@ export async function runApiTests(): Promise<TestResult[]> {
     if (!accountUpdateSchema.safeParse({ fullName: 'Updated Name' }).success) throw new Error('Valid account update was rejected');
   });
 
-  await assertTest('Validation', 'AI advisor requests ignore client-supplied candidate records', async () => {
-    const advisorInput = aiSkillAdvisorSchema.safeParse({
-      targetJobTitle: 'Backend Developer',
+  await assertTest('Validation', 'AI advisor rejects client-supplied candidate records and scores', async () => {
+    const validAdvisorInput = aiSkillAdvisorSchema.safeParse({
+      targetJobTitle: 'Backend Developer'
+    });
+    if (!validAdvisorInput.success) throw new Error('Valid advisor goal was rejected');
+
+    const spoofedAdvisorInput = aiSkillAdvisorSchema.safeParse({
+      ...validAdvisorInput.data,
       candidateProfile: { fullName: 'Spoofed User', skills: [] },
       currentScore: 100
     });
-    if (!advisorInput.success) throw new Error('Valid advisor goal was rejected');
-    if ('candidateProfile' in advisorInput.data || 'currentScore' in advisorInput.data) {
-      throw new Error('Untrusted profile or score was accepted');
-    }
+    if (spoofedAdvisorInput.success) throw new Error('Untrusted profile or score was accepted');
   });
 
   await assertTest('Validation', 'Job creation schema rejects negative salaries and empty titles', async () => {
