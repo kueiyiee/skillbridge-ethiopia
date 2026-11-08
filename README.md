@@ -51,7 +51,7 @@ The email-verification evidence migration adds a nullable verification timestamp
 
 ## System Architecture
 
-The React/Vite single-page application is served by an Express API; the API uses Drizzle ORM and MySQL. Browser requests use same-origin `/api` endpoints. AI provider credentials and integrations are server-side only. The optional `ml_service/` Python code is separate from the main Node.js build and is not deployed by CI.
+The React/Vite single-page application is served separately by Vercel, with `/api/*` requests reverse-proxied to the Express API on Render. The API uses Drizzle ORM and the cPanel-hosted MySQL database. Browser requests remain same-origin so the existing HTTP-only session cookies continue to work. AI provider credentials and integrations are server-side only. The optional `ml_service/` Python code is separate from the main Node.js build and is not part of this production deployment.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the component layout and [docs/API_INVENTORY.md](docs/API_INVENTORY.md) for the API surface.
 
@@ -89,6 +89,7 @@ The repository includes a cPanel Node.js/CloudLinux Passenger packaging path (`d
 - [Database safety and setup](docs/database.md)
 - [Local development setup](docs/development-setup.md)
 - [cPanel deployment](docs/deployment-cpanel.md)
+- [Vercel + Render + cPanel deployment](docs/deployment-vercel-render-cpanel.md)
 - [Contribution guide](CONTRIBUTING.md)
 
 ## Production Database Safety
