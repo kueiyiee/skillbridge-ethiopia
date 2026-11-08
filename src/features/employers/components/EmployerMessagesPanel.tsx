@@ -182,6 +182,28 @@ export const EmployerMessagesPanel: React.FC<EmployerMessagesPanelProps> = ({
   }, [selectedApplicationId, isVerified, refreshThreads]);
 
   useEffect(() => {
+    if (!selectedApplicationId || !isVerified) return;
+    let active = true;
+    const refreshConversation = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        const [nextConversation] = await Promise.all([
+          api.getEmployerConversation(selectedApplicationId),
+          refreshThreads(),
+        ]);
+        if (active) setConversation(nextConversation);
+      } catch {
+        // Preserve the last good conversation during temporary network interruptions.
+      }
+    };
+    const interval = window.setInterval(() => { void refreshConversation(); }, 15000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [selectedApplicationId, isVerified, refreshThreads]);
+
+  useEffect(() => {
     if (requestedApplicationId && applications.some((application) => application.id === requestedApplicationId)) {
       setSelectedApplicationId(requestedApplicationId);
       setSingleRecipientId(requestedApplicationId);
