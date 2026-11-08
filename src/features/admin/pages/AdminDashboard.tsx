@@ -947,19 +947,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         </div>}
 
         <main className="min-w-0 flex-1 space-y-5 px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-cyan-800 dark:text-cyan-300">SKILLBRIDGE ET <span className="px-1 text-slate-400">/</span> Governance</p>
-            <h2 id="admin-page-title" className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">{activeSection.title}</h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">{activeSection.description}</p>
-          </div>
-          {activeTab !== 'settings' && <div className="flex items-center gap-3">
+        <DashboardPageHeader
+          eyebrow="SKILLBRIDGE ET / Governance"
+          title={activeSection.title}
+          titleId="admin-page-title"
+          description={activeSection.description}
+          actions={activeTab !== 'settings' ? <>
             <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">{lastRefreshedAt ? `Updated ${new Date(lastRefreshedAt).toLocaleTimeString()}` : loading ? 'Loading live data…' : 'Data not refreshed'}</p>
             <button type="button" onClick={() => void loadAdminData()} disabled={refreshing} className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-slate-200/80 bg-white/65 px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-cyan-400 hover:text-cyan-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:text-cyan-200" aria-label={refreshing ? 'Refreshing page data' : 'Refresh page data'}>
               <RefreshCw className={`h-3.5 w-3.5 text-cyan-700 dark:text-cyan-300 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />Refresh
             </button>
-          </div>}
-        </div>
+          </> : undefined}
+        />
       {Object.keys(loadErrors).length > 0 && (
         <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-200" role="alert">
           <p className="font-semibold">Some governance data is unavailable.</p>
