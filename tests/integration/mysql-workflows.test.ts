@@ -217,6 +217,7 @@ export async function runApiTests(): Promise<TestResult[]> {
     try {
       const { login, readEmailVerificationStatus, register, resolveAuthenticatedUser, resendRegistrationCode, verifyRegistrationCode } =
         await import('../../backend/src/modules/auth/auth.service');
+      const { commitEmailVerificationResend } = await import('../../backend/src/modules/auth/email-verification.service');
       const { AuthError } = await import('../../backend/src/modules/auth/auth.errors');
       const password = 'Otp-workflow-password-2026!';
       const registerUser = (email: string, role: 'JOB_SEEKER' | 'EMPLOYER') => register({
@@ -263,6 +264,7 @@ export async function runApiTests(): Promise<TestResult[]> {
       const resent = await resendRegistrationCode(seeker.token);
       assert.equal(resent.shouldSendEmail, true);
       assert.match(resent.code, /^\d{6}$/);
+      await commitEmailVerificationResend(seeker.token, resent.code);
       if (resent.code !== seeker.code) {
         await assert.rejects(verifyRegistrationCode(seeker.token, seeker.code), expectAuthStatus(400));
       }
@@ -294,6 +296,7 @@ export async function runApiTests(): Promise<TestResult[]> {
         [employerId]
       );
       const employerResend = await resendRegistrationCode(employer.token);
+      await commitEmailVerificationResend(employer.token, employerResend.code);
       await verifyRegistrationCode(employer.token, employerResend.code);
       const activatedEmployer = await testDb.query<{ isActive: boolean; emailVerified: boolean }>(
         'SELECT u."isActive", u."emailVerified" FROM users u WHERE u.id = $1',
