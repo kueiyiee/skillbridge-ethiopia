@@ -34,10 +34,11 @@ import {
 const dummyPasswordHash = bcrypt.hash(randomUUID(), 12);
 
 async function verifyUserPassword(user: AuthDatabaseUser | undefined, password: string): Promise<boolean> {
-  const [passwordMatches] = await Promise.all([
-    bcrypt.compare(password, user?.passwordHash ?? await dummyPasswordHash),
-    bcrypt.compare(password, await dummyPasswordHash)
-  ]);
+  // Always perform one bcrypt comparison, including for unknown users, to reduce
+  // account-enumeration timing differences without requiring a dummy-hash match
+  // for valid accounts.
+  const passwordHash = user?.passwordHash ?? await dummyPasswordHash;
+  const passwordMatches = await bcrypt.compare(password, passwordHash);
   return Boolean(user && passwordMatches);
 }
 
