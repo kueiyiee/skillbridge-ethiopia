@@ -29,6 +29,7 @@ import type { EmployerVerificationDocument } from '@/src/services/api-client';
 import { EmployerMessagesPanel } from '../components/EmployerMessagesPanel';
 import { CandidateDiscoveryPage } from '../components/CandidateDiscoveryPage';
 import { EmployerReportsPage } from '../components/EmployerReportsPage';
+import { DashboardMetricCard, DashboardPageHeader } from '@/src/components/shared/DashboardPrimitives';
 import type { Application, ApplicationStatus, EmployerProfile, Job, Skill, SkillLevel } from '@/shared/types';
 
 interface EmployerDashboardProps {
@@ -1031,11 +1032,28 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
 
   const renderOverview = () => (
     <section className="space-y-4" aria-labelledby="employer-overview-title">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">Employer workspace</p><h2 id="employer-overview-title" className="mt-1 text-xl font-bold text-slate-950 dark:text-white">Welcome{user?.fullName ? `, ${user.fullName}` : ''}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{workspace?.companyName || authEmployer?.companyName || 'Manage your organization and recruitment activity.'}</p></div><button type="button" onClick={openCreateJobForm} disabled={!workspace?.isApproved} title={!workspace?.isApproved ? 'Business verification is required before using recruiting features.' : undefined} className={primaryButton}><Plus className="h-4 w-4" />Post a job</button></header>
+      <DashboardPageHeader
+        eyebrow="Employer workspace"
+        title={`Welcome${user?.fullName ? `, ${user.fullName}` : ''}`}
+        titleId="employer-overview-title"
+        description={workspace?.companyName || authEmployer?.companyName || 'Manage your organization and recruitment activity.'}
+        actions={<button type="button" onClick={openCreateJobForm} disabled={!workspace?.isApproved} title={!workspace?.isApproved ? 'Business verification is required before using recruiting features.' : undefined} className={primaryButton}><Plus className="h-4 w-4" />Post a job</button>}
+      />
       {workspace && !workspace.isApproved && <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30 sm:flex-row sm:items-center sm:justify-between"><div className="flex gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" /><div><p className="font-semibold text-amber-950 dark:text-amber-100">Organization verification: {readableStatus(workspace.verificationStatus || workspace.verification?.status || 'NOT_SUBMITTED')}</p><p className="mt-1 text-sm text-amber-900/80 dark:text-amber-200/80">Recruiting features are available after your business verification is approved.</p></div></div><button type="button" onClick={() => selectSection('organization')} className="min-h-9 shrink-0 rounded-lg border border-amber-300 px-3 text-sm font-semibold text-amber-950 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-100 dark:hover:bg-amber-950">Review status</button></div>}
       {loadError && <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200" role="alert">{loadError}<button type="button" onClick={() => void loadData()} className="ml-3 font-bold underline">Retry</button></div>}
       {loading && !workspace && <p className="py-10 text-center text-sm text-slate-500" role="status">Loading your organization workspace…</p>}
-      {workspace && <><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{overviewMetrics.map(({ label, value, icon: MetricIcon, destination }) => <button type="button" key={label} onClick={() => selectSection(destination)} className="sb-dashboard-metric group min-h-[112px] rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-cyan-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-cyan-800"><span className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{label}</span><MetricIcon className="h-4 w-4 text-cyan-700 dark:text-cyan-300" /></span><span className="mt-2 block text-2xl font-bold tabular-nums text-slate-950 dark:text-white">{value === null ? '—' : value.toLocaleString()}</span><span className="mt-2 inline-flex items-center text-xs font-semibold text-cyan-800 group-hover:underline dark:text-cyan-300">View {destination}<ArrowRight className="ml-1 h-3.5 w-3.5" /></span></button>)}</div>
+      {workspace && <><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{overviewMetrics.map(({ label, value, icon: MetricIcon, destination }) => (
+        <DashboardMetricCard
+          key={label}
+          label={label}
+          value={value === null ? '—' : value.toLocaleString()}
+          detail={`View ${destination}`}
+          icon={MetricIcon}
+          onClick={() => selectSection(destination)}
+          ariaLabel={`${label}: ${value === null ? 'unavailable' : value.toLocaleString()}`}
+          className="transition hover:border-cyan-300 hover:shadow-md dark:hover:border-cyan-800"
+        />
+      ))}</div>
       {applicationsError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">Applicant metrics unavailable: {applicationsError}</p>}
       <article className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
         <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="font-bold text-slate-950 dark:text-white">Recruitment pipeline</h3><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Live application counts by stage across your organization.</p></div><button type="button" onClick={() => selectSection('applications')} className="text-xs font-bold text-cyan-800 hover:underline dark:text-cyan-300">Manage applications</button></div>
