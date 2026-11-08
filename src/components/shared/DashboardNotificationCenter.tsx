@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Briefcase, ChevronRight, Clock, ShieldCheck } from 'lucide-react';
+import { Briefcase, ChevronRight, Clock, ShieldCheck } from 'lucide-react';
 import { api, type ApplicationMessageThread } from '@/src/services/api-client';
 
 type NotificationRole = 'JOB_SEEKER' | 'EMPLOYER' | 'ADMIN';
@@ -84,7 +84,7 @@ export const DashboardNotificationCenter: React.FC<DashboardNotificationCenterPr
         aria-label={role === 'ADMIN' ? 'Open governance information' : `Open notifications, ${unreadCount ?? 'unknown'} unread`}
         className="relative inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:bg-cyan-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/30"
       >
-        <Bell className="h-4 w-4" aria-hidden="true" />
+        <span aria-hidden="true" className="text-base leading-none">🔔</span>
         <span className="hidden sm:inline">Notifications</span>
         {role !== 'ADMIN' && unreadCount !== null && unreadCount > 0 && (
           <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white" aria-hidden="true">
@@ -127,7 +127,7 @@ export const DashboardNotificationCenter: React.FC<DashboardNotificationCenterPr
                 <p className="p-6 text-center text-xs text-slate-500" role="status">Checking for new activity…</p>
               ) : recentNotifications.length === 0 ? (
                 <div className="p-7 text-center">
-                  <Bell className="mx-auto h-7 w-7 text-slate-300 dark:text-slate-600" />
+                  <span aria-hidden="true" className="mx-auto block text-2xl text-slate-300 dark:text-slate-600">🔔</span>
                   <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200">You’re all caught up</p>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">New application messages and interview updates will appear here.</p>
                 </div>
