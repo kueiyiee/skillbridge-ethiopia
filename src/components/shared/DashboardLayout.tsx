@@ -212,6 +212,24 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         <main className="min-w-0 space-y-4">
           {heroBanner}
+          <nav className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-950 lg:hidden" aria-label="Career workspace navigation">
+            {jobSeekerWorkspaceNavigation.map((item) => {
+              const Icon = item.icon;
+              const active = Boolean(item.tab && item.tab === activeTab);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => activate(item)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 ${active ? 'bg-cyan-50 text-cyan-950 dark:bg-cyan-950/50 dark:text-cyan-100' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
           {children}
         </main>
       </div>
