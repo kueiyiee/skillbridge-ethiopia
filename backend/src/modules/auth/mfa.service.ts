@@ -189,7 +189,16 @@ export async function disableAuthenticatorMfa(userId: string, currentPassword: s
     const factor = selected.rows[0];
     if (!factor?.enabledAt) throw new AuthError('Authenticator MFA is not enabled.', 409);
     const step = matchingTotpStep(decryptSecret(factor), code, factor.lastTotpStep === null ? null : Number(factor.lastTotpStep));
-    if (step === null) throw new AuthError('The authenticator code is invalid or has already been used.', 401);
+    if (step === null) {
+      const recovery = await query<{ id: string }>(
+        'SELECT id FROM user_mfa_recovery_codes WHERE userId = $1 AND codeHash = $2 AND usedAt IS NULL LIMIT 1 FOR UPDATE',
+        [userId, recoveryHash(code)],
+      );
+      if (!recovery.rows[0]) throw new AuthError('The authenticator or recovery code is invalid or has already been used.', 401);
+      await query('UPDATE user_mfa_recovery_codes SET usedAt = CURRENT_TIMESTAMP WHERE id = $1 AND usedAt IS NULL', [recovery.rows[0].id]);
+    } else {
+      await query('UPDATE user_mfa_factors SET lastTotpStep = $1, updatedAt = CURRENT_TIMESTAMP WHERE userId = $2', [step, userId]);
+    }
     await query('DELETE FROM user_mfa_recovery_codes WHERE userId = $1', [userId]);
     await query('DELETE FROM user_mfa_factors WHERE userId = $1', [userId]);
     await query(
