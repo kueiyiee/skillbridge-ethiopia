@@ -98,6 +98,19 @@ Future backend-backed modules:
 
 Every count must come from a defined backend query and time window. Missing data must render as unavailable, never as zero.
 
+## Verified report issuance and printed verification
+
+The first reporting implementation now uses a shared issued-report registry:
+- PDF exports from Admin and verified Employer workspaces issue a cryptographically random report reference.
+- The registry stores issuer role, owner scope, report type/title, issue time, record count, status, and a SHA-256 fingerprint of the report data. It does not store exported personal records.
+- A4 PDF files include a QR link to the public report-verification page and a Code 39 barcode containing the report reference.
+- Public verification returns only limited issuance metadata and the report-data fingerprint; it does not expose the report rows or private organization data.
+- A revoked status is represented in the registry and verification response. Revocation administration still requires a protected governance workflow.
+- The QR link uses the existing `APP_URL` environment variable. It must be a valid absolute public origin and HTTPS in production.
+- Apply the `20261112000100_verified_report_registry` migration with `npm run db:migrate` before enabling PDF exports.
+
+The printed QR verifies the issued registry record and its data fingerprint. It does not, by itself, prove that a separately modified PDF file is unchanged; the printed report ID and SHA-256 fingerprint must be compared with the verification response.
+
 ## Delivery sequence
 
 1. Establish baseline screenshots, route inventory, current test/build results, and responsive/accessibility checks for all three dashboards.
