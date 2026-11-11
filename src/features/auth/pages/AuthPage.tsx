@@ -279,7 +279,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
                 <p className="text-sm font-semibold text-cyan-950 dark:text-cyan-100">Two-factor authentication</p>
                 <p className="text-xs leading-5 text-cyan-900 dark:text-cyan-200">Open your authenticator app and enter its current six-digit code. You may also enter one unused recovery code.</p>
                 <label htmlFor="auth-mfa-code" className="auth-label block text-sm font-semibold">Authenticator or recovery code</label>
-                <input id="auth-mfa-code" type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus required maxLength={32} value={mfaCode} onChange={(event) => setMfaCode(event.target.value.replace(/\\s/g, '').slice(0, 32))} placeholder="123456" className="auth-input text-center font-mono text-lg tracking-[0.3em]" />
+                <input id="auth-mfa-code" type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus required maxLength={32} value={mfaCode} onChange={(event) => setMfaCode(event.target.value.replace(/\s/g, '').slice(0, 32))} placeholder="123456" className="auth-input text-center font-mono text-lg tracking-[0.3em]" />
                 <button type="button" onClick={() => { setMfaPending(false); setMfaCode(''); setErrorMessage(null); }} className="text-xs font-semibold text-cyan-800 underline underline-offset-4 dark:text-cyan-200">Return to password sign-in</button>
               </div>
             )}
