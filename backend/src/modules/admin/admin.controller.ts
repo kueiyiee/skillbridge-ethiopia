@@ -18,6 +18,7 @@ import { getAdminReport } from './admin.reports';
 import { createAdminReportSnapshot, getAdminReportSnapshot } from './admin.reports.cache';
 import { createAdminReportFile } from './admin.reports.export';
 import { issueReportIdentity } from '../report-verification/report-verification.service';
+import { getMfaAdoptionSummary } from './admin.repository';
 
 function adminFromRequest(req: Request): AdminActor {
   return { userId: req.user!.userId, fullName: req.user!.fullName };
@@ -48,6 +49,14 @@ export async function moderateAdminJobController(req: Request, res: Response) {
     const parsed = adminJobModerationSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ success: false, error: 'A valid job status and reason are required.' });
     return res.json({ success: true, ...(await moderateAdminJob(id.data, adminFromRequest(req), parsed.data)) });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function getAdminMfaAdoptionSummaryController(_req: Request, res: Response) {
+  try {
+    return res.set('Cache-Control', 'no-store').json({ success: true, data: await getMfaAdoptionSummary() });
   } catch (error) {
     return handleError(res, error);
   }
