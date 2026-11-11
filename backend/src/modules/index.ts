@@ -8,6 +8,7 @@ import aiNexusRouter from './ai-nexus/ai-nexus.routes';
 import systemRouter from './system/system.routes';
 import profileRouter from './profile/profile.routes';
 import messagingRouter from './messaging/messaging.routes';
+import reportVerificationRouter from './report-verification/report-verification.routes';
 import {
   adminVerificationDocumentsRouter,
   employerVerificationDocumentsRouter,
@@ -26,4 +27,5 @@ export const apiModules = [
   { path: '/api/system', router: systemRouter },
   { path: '/api/profile', router: profileRouter },
   { path: '/api/messages', router: messagingRouter },
+  { path: '/api/report-verification', router: reportVerificationRouter },
 ] as const;
