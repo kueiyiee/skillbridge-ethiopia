@@ -8,6 +8,7 @@ import { DashboardMetricCard, DashboardPageHeader } from '@/src/components/share
 import { DashboardNotificationCenter } from '@/src/components/shared/DashboardNotificationCenter';
 import { ThemeSwitcher } from '@/src/components/navigation/ThemeSwitcher';
 import { AdminManagement } from '../components/AdminManagement';
+import { SecurityIntelligenceCenter, type SecurityAuditEvent } from '../components/SecurityIntelligenceCenter';
 import { 
   Users, 
   Building2, 
@@ -55,6 +56,7 @@ const adminNavGroups = [
     label: 'Insights & services',
     items: [
       { id: 'audit', label: 'Audit Logs', emoji: '📜', title: 'Audit Logs', description: 'Search the read-only record of administrative and platform events.' },
+      { id: 'security', label: 'Security Intelligence', emoji: '🛡️', title: 'Security Intelligence Center', description: 'Review persisted security-related audit activity and current service diagnostics.' }, 
       { id: 'diagnostics', label: 'System Health', emoji: '🖥️', title: 'System Health', description: 'Check application, database, migration, and integration status.' },
       { id: 'ai', label: 'AI & Integrations', emoji: '🤖', title: 'AI & Integrations', description: 'Review configured AI providers and their recorded service status.' },
       { id: 'reports', label: 'Reports & Analytics', emoji: '📈', title: 'Reports & Analytics', description: 'Review current operational totals reported by the platform.' },
@@ -482,10 +484,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     const requestId = ++loadRequestId.current;
     const shouldLoadVerifications = activeTab === 'overview' || activeTab === 'verifications';
     const shouldLoadUsers = activeTab === 'overview' || activeTab === 'users';
-    const shouldLoadAudit = activeTab === 'overview' || activeTab === 'audit';
+    const shouldLoadAudit = activeTab === 'overview' || activeTab === 'audit' || activeTab === 'security';
     const shouldLoadJobs = activeTab === 'jobs';
     const shouldLoadMetrics = activeTab === 'overview' || activeTab === 'verifications' || activeTab === 'jobs';
-    const shouldLoadDiagnostics = activeTab === 'overview' || activeTab === 'diagnostics' || activeTab === 'ai';
+    const shouldLoadDiagnostics = activeTab === 'overview' || activeTab === 'diagnostics' || activeTab === 'ai' || activeTab === 'security';
     setLoading((shouldLoadMetrics && metrics === null)
       || (shouldLoadVerifications && verifications === null)
       || (shouldLoadUsers && users === null)
@@ -993,6 +995,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         ))}
       </div>}
       {/* Selected section content */}
+
+      {activeTab === 'security' && (
+        <SecurityIntelligenceCenter
+          events={(auditLogs?.data ?? null) as SecurityAuditEvent[] | null}
+          totalEvents={auditLogs?.count ?? null}
+          diagnosticsStatus={diagnostics?.status ?? null}
+          databaseConnected={diagnostics?.database.connected ?? null}
+          loading={loading && !auditLogs}
+          error={loadErrors.audit || loadErrors.diagnostics}
+          onOpenAudit={() => setSearchParams({ section: 'audit' })}
+        />
+      )}
 
       {activeTab === 'jobs' && (
         <section aria-labelledby="admin-jobs-status-title" className="space-y-4">
