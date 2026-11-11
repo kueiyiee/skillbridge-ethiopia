@@ -169,7 +169,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
             <ul className="mt-4 space-y-3 text-xs">
               <li className="flex items-start justify-between gap-3">
                 <span className="text-slate-700 dark:text-slate-300">Administrator audit API</span>
-                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${events ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}`}>{events ? 'Loaded' : 'Unavailable'}</span>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${events ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}`}>{loading ? 'Loading' : events ? 'Loaded' : 'Unavailable'}</span>
               </li>
               <li className="flex items-start justify-between gap-3">
                 <span className="text-slate-700 dark:text-slate-300">System diagnostics API</span>
