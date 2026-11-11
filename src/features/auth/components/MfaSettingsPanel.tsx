@@ -119,8 +119,8 @@ export const MfaSettingsPanel: React.FC = () => {
           </div>
           <form onSubmit={disable} className="grid gap-3 sm:grid-cols-[1fr_180px_auto]">
             <input type="password" required autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Current password" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
-            <input type="text" required inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-mono tracking-widest dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
-            <button type="submit" disabled={working || code.length !== 6 || !currentPassword} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-300 px-3 text-xs font-semibold text-rose-800 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300"><ShieldOff className="h-4 w-4"/>{working ? 'Working…' : 'Disable MFA'}</button>
+            <input type="text" required inputMode="text" autoComplete="one-time-code" maxLength={32} value={code} onChange={(event) => setCode(event.target.value.replace(/\s/g, '').slice(0, 32))} placeholder="Authenticator or recovery code" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-mono tracking-widest dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
+            <button type="submit" disabled={working || ![6, 20].includes(code.trim().length) || !currentPassword} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-300 px-3 text-xs font-semibold text-rose-800 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300"><ShieldOff className="h-4 w-4"/>{working ? 'Working…' : 'Disable MFA'}</button>
           </form>
         </div>
       )}
