@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import type { Request, Response } from 'express';
 import { requireRole } from '../../middleware/auth';
 import { assertCanDeleteAdminAccount } from './auth.policy';
-import { changePasswordSchema, loginSchema, registerSchema, requestEmailVerificationSchema, verifyEmailCodeSchema } from './auth.schemas';
+import { changePasswordSchema, loginSchema, registerSchema, requestEmailVerificationSchema, verifyEmailCodeSchema, mfaCodeSchema, mfaDisableSchema, mfaLoginSchema } from './auth.schemas';
 import { generateToken, verifyToken } from './auth.tokens';
 import { register, requestRegistrationEmailVerification, resolveAuthenticatedUser, verifyLoginCredentials } from './auth.service';
 import type { AuthDatabaseUser, AuthRole } from './auth.types';
@@ -163,6 +163,15 @@ test('TOTP generation follows the RFC 6238 SHA-1 test vector', () => {
   const secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
   assert.equal(generateTotpCode(secret, 59), '287082');
   assert.equal(generateTotpCode(secret, 1111111109), '081804');
+});
+
+test('MFA enrollment, login challenge, and recovery inputs are validated', () => {
+  assert.equal(mfaCodeSchema.safeParse({ code: '123456' }).success, true);
+  assert.equal(mfaCodeSchema.safeParse({ code: '12 3456' }).success, false);
+  assert.equal(mfaDisableSchema.safeParse({ currentPassword: 'password', code: '123456' }).success, true);
+  assert.equal(mfaDisableSchema.safeParse({ currentPassword: 'password', code: 'A1B2C3D4E5F607182930' }).success, true);
+  assert.equal(mfaLoginSchema.safeParse({ challengeId: 'd9428888-122b-4c5e-9c1e-9a9c9d6b6f50', code: '123456' }).success, true);
+  assert.equal(mfaLoginSchema.safeParse({ challengeId: 'not-a-uuid', code: '123456' }).success, false);
 });
 
 test('public registration accepts only job seeker and employer roles', () => {
