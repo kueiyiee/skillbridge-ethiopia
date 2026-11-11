@@ -111,6 +111,20 @@ The first reporting implementation now uses a shared issued-report registry:
 
 The printed QR verifies the issued registry record and its data fingerprint. It does not, by itself, prove that a separately modified PDF file is unchanged; the printed report ID and SHA-256 fingerprint must be compared with the verification response.
 
+## Implemented authenticator MFA
+
+The shared account-security workspace now supports TOTP MFA for Job Seeker, Employer, and Administrator accounts:
+- Enrollment requires the current password and a QR/manual setup key.
+- TOTP secrets are encrypted at rest using AES-256-GCM with a dedicated `MFA_ENCRYPTION_KEY`.
+- Login issues a short-lived, one-time MFA challenge instead of an authenticated session when TOTP is enabled.
+- The challenge accepts a current TOTP code or a one-time recovery code.
+- Recovery codes are generated once, stored as SHA-256 hashes, and consumed after use.
+- TOTP steps are tracked to reject code replay.
+- Enrollment, disablement, and successful MFA sign-ins are written to platform audit logs.
+- Admin Security Intelligence Center reads real active-account MFA adoption counts grouped by role.
+
+This implementation is authenticator-app TOTP MFA. WebAuthn/passkeys (the correct browser-mediated path for Android fingerprint, Windows Hello, Face ID, and security keys) are not yet implemented. SKILLBRIDGE does not collect or store biometric templates.
+
 ## Delivery sequence
 
 1. Establish baseline screenshots, route inventory, current test/build results, and responsive/accessibility checks for all three dashboards.
