@@ -3,6 +3,8 @@ import PDFDocument from 'pdfkit';
 import { stringify } from 'csv-stringify/sync';
 import { resolve } from 'node:path';
 import { ADMIN_REPORT_ROW_LIMIT, type AdminReportResult, type ReportValueType } from './admin.reports';
+import { drawReportBarcode, drawReportQr } from '../report-verification/report-identity.pdf';
+import type { IssuedReportIdentity } from '../report-verification/report-verification.service';
 
 export type AdminReportFormat = 'pdf' | 'xlsx' | 'csv';
 
@@ -164,9 +166,9 @@ function drawRichText(
   });
 }
 
-function createPdf(report: AdminReportResult): Promise<Buffer> {
+function createPdf(report: AdminReportResult, verification?: IssuedReportIdentity): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'LETTER', layout: report.columns.length > 5 ? 'landscape' : 'portrait', margin: 42, bufferPages: true, info: { Title: report.title, Author: 'SKILLBRIDGE ET' } });
+    const doc = new PDFDocument({ size: 'A4', layout: report.columns.length > 5 ? 'landscape' : 'portrait', margin: 42, bufferPages: true, info: { Title: report.title, Author: 'SKILLBRIDGE ET', Subject: 'Digitally verifiable SKILLBRIDGE ET report' } });
     const chunks: Buffer[] = [];
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('error', reject);
@@ -287,6 +289,23 @@ function createPdf(report: AdminReportResult): Promise<Buffer> {
       }
     }
 
+    if (verification) {
+      doc.addPage({ size: 'A4', layout: 'portrait', margin: 42 });
+      drawRichText(doc, 'DOCUMENT AUTHENTICITY', left, 48, pageWidth(), 16, 8, '#0E7490');
+      drawRichText(doc, 'Official report verification', left, 72, pageWidth(), 26, 18, '#10243C');
+      drawRichText(doc, 'This page contains the report reference, machine-readable verification code, and report-data fingerprint.', left, 104, pageWidth(), 28, 9, '#475569');
+      drawRichText(doc, `Report ID: ${verification.id}`, left, 146, pageWidth() - 118, 18, 10, '#10243C');
+      drawRichText(doc, `Issued: ${report.generatedAt}`, left, 168, pageWidth() - 118, 18, 8, '#334155');
+      drawRichText(doc, `SHA-256 data fingerprint: ${verification.reportHash}`, left, 192, pageWidth() - 118, 38, 7.5, '#334155');
+      drawReportQr(doc, verification.verificationUrl, left + pageWidth() - 100, 140, 94);
+      drawRichText(doc, 'SCAN TO VERIFY', left + pageWidth() - 105, 238, 104, 14, 7, '#0E7490', 'center');
+      drawRichText(doc, 'Barcode reference', left, 252, pageWidth(), 16, 8, '#475569');
+      drawReportBarcode(doc, verification.id, left, 274, pageWidth() - 8, 42);
+      drawRichText(doc, verification.id, left, 320, pageWidth(), 16, 9, '#10243C');
+      drawRichText(doc, 'Verification confirms that SKILLBRIDGE ET issued a report record with this ID and data fingerprint. Compare the printed report content and fingerprint; a valid code alone does not certify that a modified copy is unchanged.', left, 354, pageWidth(), 54, 8, '#475569');
+      drawRichText(doc, verification.verificationUrl, left, 420, pageWidth(), 30, 7, '#0E7490');
+    }
+
     const pages = doc.bufferedPageRange();
     for (let index = pages.start; index < pages.start + pages.count; index += 1) {
       doc.switchToPage(index);
@@ -298,13 +317,13 @@ function createPdf(report: AdminReportResult): Promise<Buffer> {
   });
 }
 
-export async function createAdminReportFile(report: AdminReportResult, format: AdminReportFormat): Promise<AdminReportFile> {
+export async function createAdminReportFile(report: AdminReportResult, format: AdminReportFormat, verification?: IssuedReportIdentity): Promise<AdminReportFile> {
   const extension = format === 'xlsx' ? 'xlsx' : format;
   const contentType = format === 'pdf'
     ? 'application/pdf'
     : format === 'xlsx'
       ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       : 'text/csv; charset=utf-8';
-  const buffer = format === 'pdf' ? await createPdf(report) : format === 'xlsx' ? await createXlsx(report) : createCsv(report);
+  const buffer = format === 'pdf' ? await createPdf(report, verification) : format === 'xlsx' ? await createXlsx(report) : createCsv(report);
   return { buffer, contentType, extension, filename: createFilename(report, extension) };
 }
