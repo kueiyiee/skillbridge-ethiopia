@@ -10,6 +10,7 @@ import { generateToken, verifyToken } from './auth.tokens';
 import { register, requestRegistrationEmailVerification, resolveAuthenticatedUser, verifyLoginCredentials } from './auth.service';
 import type { AuthDatabaseUser, AuthRole } from './auth.types';
 import { AuthError } from './auth.errors';
+import { generateTotpCode } from './mfa.service';
 import {
   assertEmailDeliveryConfigured,
   getEmailVerificationUrl,
@@ -157,6 +158,12 @@ function createVerificationFixture(overrides: Record<string, unknown> = {}) {
     },
   };
 }
+
+test('TOTP generation follows the RFC 6238 SHA-1 test vector', () => {
+  const secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+  assert.equal(generateTotpCode(secret, 59), '287082');
+  assert.equal(generateTotpCode(secret, 1111111109), '081804');
+});
 
 test('public registration accepts only job seeker and employer roles', () => {
   const base = { email: 'admin@example.test', password: 'a-strong-test-password', fullName: 'Test User' };
