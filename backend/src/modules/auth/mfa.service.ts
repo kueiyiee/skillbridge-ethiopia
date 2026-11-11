@@ -203,14 +203,20 @@ export async function disableAuthenticatorMfa(userId: string, currentPassword: s
 
 export async function createLoginMfaChallenge(userId: string): Promise<string> {
   const id = randomUUID();
+  await db.query('DELETE FROM auth_mfa_challenges WHERE expiresAt < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY)');
   await db.query(
-    'INSERT INTO auth_mfa_challenges (id, userId, expiresAt, usedAt, createdAt) VALUES ($1, $2, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 MINUTE), NULL, CURRENT_TIMESTAMP)',
+    'INSERT INTO auth_mfa_challenges (id, userId, expiresAt, attempts, usedAt, createdAt) VALUES ($1, $2, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 MINUTE), 0, NULL, CURRENT_TIMESTAMP)',
     [id, userId],
   );
   return id;
 }
 
 export async function verifyLoginMfaChallenge(challengeId: string, code: string) {
+  const attempt = await db.query(
+    'UPDATE auth_mfa_challenges SET attempts = attempts + 1 WHERE id = $1 AND usedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP AND attempts < 5',
+    [challengeId],
+  );
+  if (attempt.rowCount !== 1) throw new AuthError('This sign-in challenge has expired, was already used, or reached its attempt limit. Sign in again.', 401);
   return db.transaction(async ({ query }) => {
     const challengeResult = await query<{ userId: string }>(
       'SELECT userId FROM auth_mfa_challenges WHERE id = $1 AND usedAt IS NULL AND expiresAt > CURRENT_TIMESTAMP FOR UPDATE',
