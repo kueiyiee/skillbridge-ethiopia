@@ -3,6 +3,7 @@ CREATE TABLE `user_mfa_factors` (
   `secretCiphertext` TEXT NOT NULL,
   `secretIv` VARCHAR(32) NOT NULL,
   `secretTag` VARCHAR(32) NOT NULL,
+  `lastTotpStep` BIGINT NULL,
   `enabledAt` DATETIME(3) NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
