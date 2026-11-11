@@ -441,6 +441,60 @@ export const api = {
     return data;
   },
 
+  async completeMfaLogin(challengeId: string, code: string) {
+    const res = await fetch('/api/auth/mfa/login/verify', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ challengeId, code }),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'MFA verification failed');
+    if (!data.success) throw new Error(data.error || 'MFA verification failed');
+    return data;
+  },
+
+  async getMfaStatus(): Promise<{ totpEnabled: boolean; enabledAt: string | null; recoveryCodesRemaining: number; passkeysEnabled: boolean }> {
+    const res = await fetch('/api/auth/mfa', { headers: getHeaders(false), cache: 'no-store' });
+    const data = await safeJson(res, 'MFA status could not be loaded');
+    return data.data;
+  },
+
+  async beginTotpEnrollment(currentPassword: string): Promise<{ secret: string; otpauthUrl: string; issuer: string; account: string }> {
+    const res = await fetch('/api/auth/mfa/totp/enroll', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ currentPassword }),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'Authenticator enrollment could not be started');
+    return data.data;
+  },
+
+  async confirmTotpEnrollment(code: string): Promise<{ enabled: boolean; recoveryCodes: string[] }> {
+    const res = await fetch('/api/auth/mfa/totp/confirm', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ code }),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'Authenticator could not be verified');
+    return data.data;
+  },
+
+  async disableTotp(currentPassword: string, code: string): Promise<void> {
+    const res = await fetch('/api/auth/mfa/totp/disable', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ currentPassword, code }),
+      cache: 'no-store',
+    });
+    await safeJson(res, 'Authenticator MFA could not be disabled');
+  },
+
   async requestPasswordReset(email: string): Promise<{ message: string }> {
     const res = await fetch('/api/auth/forgot-password', {
       method: 'POST',
