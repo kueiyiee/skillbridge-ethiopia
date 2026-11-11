@@ -5,6 +5,7 @@ import {
   getAdminMetricsController,
   getAdminDiagnosticsController,
   getAdminReportController,
+  getAdminMfaAdoptionSummaryController,
   listAuditLogsController,
   listAdminJobsController,
   listUsersController,
@@ -78,6 +79,7 @@ router.post('/verifications/:id/email/resend', governanceMutationLimit, resendEm
 router.get('/jobs', listAdminJobsController);
 router.patch('/jobs/:id/moderate', governanceMutationLimit, moderateAdminJobController);
 router.get('/audit-logs', listAuditLogsController);
+router.get('/security/mfa-summary', getAdminMfaAdoptionSummaryController);
 router.get('/reports', reportPreviewLimit, getAdminReportController);
 router.post('/reports/export', reportExportLimit, exportAdminReportController);
 router.get('/metrics', getAdminMetricsController);
