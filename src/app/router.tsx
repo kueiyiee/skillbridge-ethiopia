@@ -19,6 +19,7 @@ import { AboutPage } from '@/src/pages/AboutPage';
 import { ContactPage } from '@/src/pages/ContactPage';
 import { AuthPage } from '@/src/features/auth/pages/AuthPage';
 import { VerifyEmailPage } from '@/src/features/auth/pages/VerifyEmailPage';
+import { ReportVerificationPage } from '@/src/features/reports/pages/ReportVerificationPage';
 import { ForgotPasswordPage, ResetPasswordPage } from '@/src/features/auth/pages/PasswordRecoveryPages';
 import { AccountProfilePage } from '@/src/features/auth/pages/AccountProfilePage';
 import { AiNexusPage } from '@/src/features/ai-nexus/pages/AiNexusPage';
@@ -69,6 +70,7 @@ function AppLayout() {
     if (normalized === '/contact') return 'contact';
     if (normalized === '/auth') return 'auth';
     if (normalized === '/verify-email') return 'verify-email';
+    if (normalized.startsWith('/verify-report/')) return 'report-verification';
     if (normalized === '/account/security') return 'account-security';
     if (normalized === '/account/profile' || normalized === '/account/settings') return 'account-profile';
     return normalized.replace('/', '').replace(/\//g, '-') || 'landing';
@@ -211,6 +213,7 @@ function AppLayout() {
             element={<AuthPage initialMode={(new URLSearchParams(location.search).get('mode') === 'signup' ? 'signup' : 'login')} onNavigate={navigateTo} />}
           />
           <Route path="/verify-email" element={<VerifyEmailPage onNavigate={navigateTo} />} />
+          <Route path="/verify-report/:reportId" element={<ReportVerificationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
