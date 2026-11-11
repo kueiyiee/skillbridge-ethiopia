@@ -4,6 +4,8 @@ Base path: `/api`. The frontend uses same-origin requests through `src/services/
 
 Status codes below describe intended handler behavior. Validation failures generally return `400`, missing records `404`, unauthenticated requests `401`/`403`, and unexpected or unavailable database/service operations `500`/`503`.
 
+| `GET /api/report-verification/:reportId` | Public, rate-limited | Returns limited issuance metadata, current validity status, and the report-data SHA-256 fingerprint. Does not return report rows or private employer data. |
+
 ## Health and system
 
 | Method and path | Access | Request, persistence, and response |
