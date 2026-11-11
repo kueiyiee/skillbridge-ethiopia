@@ -1200,6 +1200,16 @@ export const api = {
     return { count: data.count, data: data.data || [], page: data.page, pageSize: data.pageSize, totalPages: data.totalPages };
   },
 
+  async getAdminMfaAdoptionSummary(): Promise<Array<{ role: string; totalAccounts: number; mfaEnabled: number }>> {
+    const res = await fetch('/api/admin/security/mfa-summary', {
+      headers: getHeaders(false),
+      cache: 'no-store',
+      signal: adminRequestTimeout(),
+    });
+    const data = await safeJson(res, 'MFA adoption summary could not be loaded');
+    return data.data ?? [];
+  },
+
   async getAdminEmployerVerificationSummary(): Promise<AdminEmployerVerificationSummary> {
     const res = await fetch('/api/admin/verifications/summary', {
       headers: getHeaders(false),
