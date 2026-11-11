@@ -19,7 +19,8 @@ interface AuthContextType {
   employerProfile: EmployerProfile | null;
   systemStatus: SystemStatus | null;
   isLoading: boolean;
-  login: (email: string, pass: string) => Promise<Role>;
+  login: (email: string, pass: string) => Promise<Role | null>;
+  completeMfaLogin: (code: string) => Promise<Role>;
   register: (payload: { email: string; password: string; fullName: string; role: RegistrationRole; phone?: string; companyOrSchool?: string }) => Promise<void>;
   completeEmailVerification: (code: string) => Promise<Role>;
   logout: () => Promise<void>;
@@ -38,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [employerProfile, setEmployerProfile] = useState<EmployerProfile | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
 
   const resetAuthState = () => {
     setUser(null);
@@ -45,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setEmployerProfile(null);
     setSystemStatus(null);
     setRole('JOB_SEEKER');
+    setMfaChallengeId(null);
   };
 
   const initAuth = async () => {
@@ -81,16 +84,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (email: string, pass: string) => {
-    const res = await api.login({ email, password: pass });
-    setUser({ ...res.user, emailVerified: res.user.emailVerified === true });
-    setRole(res.user.role);
+  const applyAuthenticatedUser = async (authenticatedUser: User) => {
+    setUser({ ...authenticatedUser, emailVerified: authenticatedUser.emailVerified === true });
+    setRole(authenticatedUser.role);
+    if (authenticatedUser.role === 'JOB_SEEKER') await refreshCandidate();
+    else if (authenticatedUser.role === 'EMPLOYER') await refreshEmployer();
+    else if (authenticatedUser.role === 'ADMIN') await refreshSystemStatus();
+  };
 
-    if (res.user.role === 'JOB_SEEKER') {
-      await refreshCandidate();
-    } else if (res.user.role === 'EMPLOYER') {
-      await refreshEmployer();
+  const login = async (email: string, pass: string): Promise<Role | null> => {
+    const res = await api.login({ email, password: pass });
+    if (res.mfaRequired === true) {
+      setMfaChallengeId(res.challengeId);
+      return null;
     }
+    setMfaChallengeId(null);
+    await applyAuthenticatedUser(res.user);
+    return res.user.role;
+  };
+
+  const completeMfaLogin = async (code: string): Promise<Role> => {
+    if (!mfaChallengeId) throw new Error('Your MFA sign-in challenge is missing. Sign in again.');
+    const res = await api.completeMfaLogin(mfaChallengeId, code);
+    setMfaChallengeId(null);
+    await applyAuthenticatedUser(res.user);
     return res.user.role;
   };
 
@@ -163,6 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         systemStatus,
         isLoading,
         login,
+        completeMfaLogin,
         register,
         completeEmailVerification,
         logout,
