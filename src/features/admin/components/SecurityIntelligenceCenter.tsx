@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { Activity, ArrowUpRight, Clock3, Database, Fingerprint, ShieldAlert, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Activity, ArrowUpRight, Clock3, Database, Fingerprint, KeyRound, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { api } from '@/src/services/api-client';
 
 export interface SecurityAuditEvent {
   id: string;
@@ -38,6 +39,17 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
   error,
   onOpenAudit,
 }) => {
+  const [mfaSummary, setMfaSummary] = useState<Array<{ role: string; totalAccounts: number; mfaEnabled: number }> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    api.getAdminMfaAdoptionSummary().then((summary) => { if (active) setMfaSummary(summary); }).catch(() => { if (active) setMfaSummary(null); });
+    return () => { active = false; };
+  }, []);
+
+  const mfaEnabled = mfaSummary?.reduce((sum, item) => sum + item.mfaEnabled, 0) ?? 0;
+  const mfaTotal = mfaSummary?.reduce((sum, item) => sum + item.totalAccounts, 0) ?? 0;
+
   const securityEvents = useMemo(
     () => (events ?? []).filter((event) => SECURITY_ACTION.test(`${event.action} ${event.entityType ?? ''} ${event.details ?? ''}`)),
     [events],
@@ -67,6 +79,12 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
       value: diagnosticsStatus ? diagnosticsStatus.replaceAll('-', ' ') : 'Unknown',
       detail: 'Live application diagnostic',
       icon: ShieldCheck,
+    },
+    {
+      label: 'Accounts with MFA',
+      value: mfaSummary ? `${mfaEnabled.toLocaleString()} / ${mfaTotal.toLocaleString()}` : '—',
+      detail: mfaSummary ? 'Enabled TOTP across active accounts' : 'MFA adoption data unavailable',
+      icon: KeyRound,
     },
   ];
 
@@ -162,6 +180,20 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
                 <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${events ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}`}>{events ? 'Loaded' : 'Unavailable'}</span>
               </li>
             </ul>
+          </section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+            <h3 className="text-sm font-bold text-slate-950 dark:text-white">MFA adoption by role</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Counts are queried from active accounts and enabled authenticator factors.</p>
+            {mfaSummary ? (
+              <ul className="mt-4 space-y-3">
+                {mfaSummary.map((item) => (
+                  <li key={item.role} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{item.role.replaceAll('_', ' ')}</span>
+                    <span className="font-mono font-bold tabular-nums text-slate-950 dark:text-white">{item.mfaEnabled.toLocaleString()} / {item.totalAccounts.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">MFA adoption data is unavailable.</p>}
           </section>
           <section className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 dark:border-cyan-900/60 dark:bg-cyan-950/20 sm:p-5">
             <div className="flex items-center gap-2 text-cyan-900 dark:text-cyan-200"><ShieldAlert className="h-4 w-4" /><h3 className="text-xs font-bold">Monitoring scope</h3></div>
