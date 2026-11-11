@@ -38,9 +38,10 @@ export function drawReportBarcode(doc: PdfDocument, value: string, x: number, y:
   const encoded = `*${normalized}*`;
   const patterns = [...encoded].map((character) => CODE39[character]).filter(Boolean);
   if (!patterns.length) return;
-  const units = patterns.reduce((sum, pattern) => sum + [...pattern].reduce((total, width) => total + (width === 'w' ? 3 : 1), 0), 0) + patterns.length - 1;
+  const encodedUnits = patterns.reduce((sum, pattern) => sum + [...pattern].reduce((total, width) => total + (width === 'w' ? 3 : 1), 0), 0) + patterns.length - 1;
+  const units = encodedUnits + 20;
   const scale = Math.min(0.9, maxWidth / units);
-  let cursor = x;
+  let cursor = x + 10 * scale;
   patterns.forEach((pattern, index) => {
     [...pattern].forEach((width, elementIndex) => {
       const elementWidth = (width === 'w' ? 3 : 1) * scale;
