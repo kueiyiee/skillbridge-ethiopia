@@ -4,6 +4,7 @@ import { useAuth } from '@/src/app/providers/AuthContext';
 import type { SystemStatus } from '@/shared/types';
 import { api, type AdminEmployerVerificationSummary, type AdminPageResult, type AdminReport, type AdminReportFormat, type AdminReportType, type AdminUserSummary, type EmployerVerificationDocument, type EmployerVerificationHistoryItem } from '@/src/services/api-client';
 import { BrandLogo } from '@/src/components/shared/BrandLogo';
+import { EthiopianDateTime } from '@/src/components/shared/EthiopianDateTime';
 import { DashboardMetricCard, DashboardPageHeader } from '@/src/components/shared/DashboardPrimitives';
 import { DashboardNotificationCenter } from '@/src/components/shared/DashboardNotificationCenter';
 import { ThemeSwitcher } from '@/src/components/navigation/ThemeSwitcher';
@@ -2310,8 +2311,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
         </main>
       </div>
-      <footer className="border-t border-slate-200 px-4 py-3 text-center text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
-        © 2026 SKILLBRIDGE ET · Admin Portal
+      <footer className="border-t border-slate-200 px-4 py-3 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <div className="mx-auto flex max-w-screen-2xl flex-col items-center justify-between gap-2 sm:flex-row">
+          <span>© {new Date().getFullYear()} SKILLBRIDGE ET · Administrative Governance Portal</span>
+          <span className="inline-flex items-center gap-2" aria-live="off">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            <span>Local time</span>
+            <EthiopianDateTime />
+          </span>
+        </div>
       </footer>
     </div>
   );
