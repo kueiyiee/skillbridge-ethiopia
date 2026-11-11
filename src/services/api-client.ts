@@ -844,8 +844,9 @@ export const api = {
   async exportEmployerReport(
     type: EmployerReportType,
     filters: { startDate?: string; endDate?: string } = {},
+    format: 'csv' | 'pdf' = 'csv',
   ): Promise<{ blob: Blob; filename: string; truncated: boolean; recordCount: number }> {
-    const params = new URLSearchParams({ format: 'csv' });
+    const params = new URLSearchParams({ format });
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
@@ -858,7 +859,7 @@ export const api = {
       throw new Error(payload?.error || 'Employer report export failed. Please retry.');
     }
     const disposition = res.headers.get('content-disposition') || '';
-    const filename = disposition.match(/filename="([^"]+)"/i)?.[1] || `skillbridge-employer-${type}.csv`;
+    const filename = disposition.match(/filename="([^"]+)"/i)?.[1] || `SKILLBRIDGE_ET_Employer_${type}.${format}`;
     return {
       blob: await res.blob(),
       filename,
