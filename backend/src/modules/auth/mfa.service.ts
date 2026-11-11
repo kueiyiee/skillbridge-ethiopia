@@ -11,7 +11,7 @@ const CHALLENGE_MINUTES = 5;
 function encryptionKey(): Buffer {
   const configured = process.env.MFA_ENCRYPTION_KEY;
   if (!configured || configured.length < 32) {
-    throw new Error('MFA_ENCRYPTION_KEY must be configured as a separate random secret of at least 32 characters.');
+    throw new AuthError('Authenticator MFA is temporarily unavailable. Contact platform support.', 503);
   }
   return createHash('sha256').update(configured, 'utf8').digest();
 }
