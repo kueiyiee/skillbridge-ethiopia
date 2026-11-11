@@ -485,7 +485,7 @@ export const AccountProfilePage: React.FC = () => {
           </form>
           )}
 
-          {activeSection === 'security' && <Section id="security" title="Security" description="Change your password and review security guidance for your account.">
+          {activeSection === 'security' && <Section id="security" title="Security" description="Manage your password and authenticator-based two-factor sign-in protection.">
             <PasswordChangeForm />
             <MfaSettingsPanel />
           </Section>}
