@@ -22,6 +22,8 @@ import {
   updateEmployerApplicationStatus,
 } from './employers.service';
 import { createEmployerReportCsv } from './employers.reports';
+import { createEmployerReportPdf } from './employers.reports.pdf';
+import { issueReportIdentity } from '../report-verification/report-verification.service';
 
 function handleError(res: Response, error: unknown) {
   if (error instanceof EmployerError) return res.status(error.statusCode).json({ success: false, error: error.message });
@@ -105,7 +107,7 @@ export async function getEmployerReportsController(_req: Request, res: Response)
       { type: 'pipeline', label: 'Recruitment pipeline', dateBasis: 'Application submission date' },
       { type: 'candidate-activity', label: 'Candidate activity', dateBasis: 'Application submission date' },
     ],
-    supportedFormats: ['csv'],
+    supportedFormats: ['csv', 'pdf'],
   });
 }
 
@@ -134,17 +136,71 @@ export async function exportEmployerReportController(req: Request, res: Response
     }
     const report = await getEmployerReportExport(actor(req), type.data, filters.data);
     const generatedAt = new Date().toISOString();
+    const titles: Record<string, string> = {
+      'job-performance': 'Job Performance',
+      applications: 'Applications Register',
+      pipeline: 'Recruitment Pipeline',
+      'candidate-activity': 'Candidate Activity',
+    };
+    const title = titles[type.data];
+    const date = generatedAt.slice(0, 10);
+    const baseName = `SKILLBRIDGE_ET_Employer_${type.data}_${date}`;
+
+    if (filters.data.format === 'pdf') {
+      const verification = await issueReportIdentity({
+        issuerUserId: req.user!.userId,
+        issuerRole: 'EMPLOYER',
+        employerId: report.employerId,
+        reportType: type.data,
+        reportTitle: title,
+        generatedAt,
+        recordCount: report.total,
+        reportPayload: {
+          type: type.data,
+          title,
+          generatedAt,
+          period: filters.data,
+          employerId: report.employerId,
+          total: report.total,
+          summary: report.summary,
+          columns: report.columns,
+          rows: report.rows,
+          truncated: report.truncated,
+        },
+      });
+      const buffer = await createEmployerReportPdf({
+        reportId: verification.id,
+        verificationUrl: verification.verificationUrl,
+        reportHash: verification.reportHash,
+        title,
+        generatedAt,
+        startDate: filters.data.startDate,
+        endDate: filters.data.endDate,
+        employerId: report.employerId,
+        totalRecords: report.total,
+        truncated: report.truncated,
+        summary: report.summary,
+        columns: report.columns,
+        rows: report.rows,
+      });
+      return res.set({
+        'Cache-Control': 'no-store, private',
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${baseName}.pdf"`,
+        'X-Report-Record-Count': String(report.rows.length),
+        'X-Report-Truncated': String(report.truncated),
+        'X-Report-Verification-Id': verification.id,
+      }).send(buffer);
+    }
+
     const csv = createEmployerReportCsv(type.data, generatedAt, filters.data, report.columns, report.rows);
-    const date = new Date().toISOString().slice(0, 10);
-    const filename = `skillbridge-employer-${type.data}-${date}.csv`;
-    res.set({
-      'Cache-Control': 'no-store',
+    return res.set({
+      'Cache-Control': 'no-store, private',
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Disposition': `attachment; filename="${baseName}.csv"`,
       'X-Report-Record-Count': String(report.rows.length),
       'X-Report-Truncated': String(report.truncated),
-    });
-    return res.send(csv);
+    }).send(csv);
   } catch (error) {
     return handleError(res, error);
   }
