@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrandLogo } from './BrandLogo';
+import { EthiopianDateTime } from './EthiopianDateTime';
 
 interface FooterProps {
   onNavigate: (page: string, params?: Record<string, string>) => void;
@@ -47,8 +48,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </nav>
         </div>
 
-        <div className="mt-8 border-t border-slate-200 pt-5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          © 2026 SKILLBRIDGE ET · Computer Science academic capstone.
+        <div className="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} SKILLBRIDGE ET · Computer Science academic capstone.</span>
+          <span className="inline-flex items-center gap-2" aria-live="off">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            <span>Local time</span>
+            <EthiopianDateTime />
+          </span>
         </div>
       </div>
     </footer>
