@@ -107,7 +107,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
             <ShieldCheck className="h-4 w-4" /> Admin workspace
           </div>
         </div>
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map(({ label, value, detail, icon: Icon }) => (
             <article key={label} className="min-w-0 rounded-xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
