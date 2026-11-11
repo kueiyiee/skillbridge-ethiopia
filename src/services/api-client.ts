@@ -454,7 +454,7 @@ export const api = {
     return data;
   },
 
-  async getMfaStatus(): Promise<{ totpEnabled: boolean; enabledAt: string | null; recoveryCodesRemaining: number; passkeysEnabled: boolean }> {
+  async getMfaStatus(): Promise<{ totpEnabled: boolean; enabledAt: string | null; recoveryCodesRemaining: number }> {
     const res = await fetch('/api/auth/mfa', { headers: getHeaders(false), cache: 'no-store' });
     const data = await safeJson(res, 'MFA status could not be loaded');
     return data.data;
