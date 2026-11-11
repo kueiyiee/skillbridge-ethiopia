@@ -43,7 +43,7 @@ export async function issueReportIdentity(input: {
   if (process.env.NODE_ENV === 'production' && parsedBase.protocol !== 'https:') {
     throw new Error('Verifiable report links require HTTPS in production.');
   }
-  const verificationUrl = new URL(`/api/report-verification/${encodeURIComponent(id)}`, parsedBase).toString();
+  const verificationUrl = new URL(`/verify-report/${encodeURIComponent(id)}`, parsedBase).toString();
 
   await db.query(
     `INSERT INTO issued_reports
