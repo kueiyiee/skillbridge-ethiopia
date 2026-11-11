@@ -538,3 +538,21 @@ export async function readMetricCounts() {
   ]);
   return { candidates, employers, verifications, jobs, applications, evaluations };
 }
+
+export async function getMfaAdoptionSummary() {
+  const result = await db.query<{ role: string; totalAccounts: number | string; mfaEnabled: number | string }>(
+    `SELECT users.role,
+       COUNT(DISTINCT users.id) AS totalAccounts,
+       COUNT(DISTINCT CASE WHEN user_mfa_factors.enabledAt IS NOT NULL THEN users.id END) AS mfaEnabled
+     FROM users
+     LEFT JOIN user_mfa_factors ON user_mfa_factors.userId = users.id
+     WHERE users.isActive = true AND users.archivedAt IS NULL
+     GROUP BY users.role
+     ORDER BY users.role`,
+  );
+  return result.rows.map((row) => ({
+    role: row.role,
+    totalAccounts: Number(row.totalAccounts),
+    mfaEnabled: Number(row.mfaEnabled),
+  }));
+}
