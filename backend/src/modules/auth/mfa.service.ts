@@ -118,7 +118,7 @@ export async function getAuthenticatorMfaStatus(userId: string) {
     : null;
   return {
     totpEnabled: Boolean(enabledAt),
-    enabledAt: enabledAt ? new Date(enabledAt).toISOString() : null,
+    enabledAt: enabledAt ? (enabledAt instanceof Date ? enabledAt : new Date(enabledAt)).toISOString() : null,
     recoveryCodesRemaining: Number(recovery?.rows[0]?.count ?? 0),
   };
 }
