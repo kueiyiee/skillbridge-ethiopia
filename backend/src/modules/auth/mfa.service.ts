@@ -168,8 +168,8 @@ export async function confirmAuthenticatorEnrollment(userId: string, code: strin
     }
     await query(
       `INSERT INTO platform_audit_logs (id, userId, action, entityType, entityId, details)
-       VALUES ($1, $2, 'MFA_TOTP_ENABLED', 'User', $2, 'Authenticator-based multi-factor authentication enabled.')`,
-      [`audit-${randomUUID()}`, userId],
+       VALUES ($1, $2, 'MFA_TOTP_ENABLED', 'User', $3, 'Authenticator-based multi-factor authentication enabled.')`,
+      [`audit-${randomUUID()}`, userId, userId],
     );
     return { enabled: true, recoveryCodes };
   });
@@ -190,8 +190,8 @@ export async function disableAuthenticatorMfa(userId: string, currentPassword: s
     await query('DELETE FROM user_mfa_factors WHERE userId = $1', [userId]);
     await query(
       `INSERT INTO platform_audit_logs (id, userId, action, entityType, entityId, details)
-       VALUES ($1, $2, 'MFA_TOTP_DISABLED', 'User', $2, 'Authenticator-based multi-factor authentication disabled after password and TOTP verification.')`,
-      [`audit-${randomUUID()}`, userId],
+       VALUES ($1, $2, 'MFA_TOTP_DISABLED', 'User', $3, 'Authenticator-based multi-factor authentication disabled after password and TOTP verification.')`,
+      [`audit-${randomUUID()}`, userId, userId],
     );
     return { disabled: true };
   });
@@ -253,8 +253,8 @@ export async function verifyLoginMfaChallenge(challengeId: string, code: string)
     if (!user) throw new AuthError('This account is no longer eligible to sign in.', 403);
     await query(
       `INSERT INTO platform_audit_logs (id, userId, action, entityType, entityId, details)
-       VALUES ($1, $2, 'MFA_LOGIN_VERIFIED', 'User', $2, $3)`,
-      [`audit-${randomUUID()}`, user.id, recoveryUsed ? 'Sign-in completed using a one-time recovery code.' : 'Sign-in completed using TOTP.'],
+       VALUES ($1, $2, 'MFA_LOGIN_VERIFIED', 'User', $3, $4)`,
+      [`audit-${randomUUID()}`, user.id, user.id, recoveryUsed ? 'Sign-in completed using a one-time recovery code.' : 'Sign-in completed using TOTP.'],
     );
     return user;
   });
