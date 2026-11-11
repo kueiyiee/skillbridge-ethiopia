@@ -146,20 +146,21 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
 
         <aside className="space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-5">
-            <h3 className="text-sm font-bold text-slate-950 dark:text-white">Security engineering status</h3>
-            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Controls that require dedicated implementation and verification.</p>
+            <h3 className="text-sm font-bold text-slate-950 dark:text-white">Connected data sources</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Live information displayed in this workspace is sourced from existing protected platform services.</p>
             <ul className="mt-4 space-y-3 text-xs">
-              {[
-                ['Persisted audit trail', 'Available', 'success'],
-                ['Live intrusion detection', 'Not integrated', 'warning'],
-                ['Passkey / WebAuthn MFA', 'Not yet integrated', 'warning'],
-                ['Malware scanning for uploads', 'Not configured', 'warning'],
-              ].map(([label, status, tone]) => (
-                <li key={label} className="flex items-start justify-between gap-3">
-                  <span className="text-slate-700 dark:text-slate-300">{label}</span>
-                  <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${tone === 'success' ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}`}>{status}</span>
-                </li>
-              ))}
+              <li className="flex items-start justify-between gap-3">
+                <span className="text-slate-700 dark:text-slate-300">Administrator audit API</span>
+                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">Connected</span>
+              </li>
+              <li className="flex items-start justify-between gap-3">
+                <span className="text-slate-700 dark:text-slate-300">System diagnostics API</span>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${diagnosticsStatus ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}`}>{diagnosticsStatus ? 'Responding' : 'Unavailable'}</span>
+              </li>
+              <li className="flex items-start justify-between gap-3">
+                <span className="text-slate-700 dark:text-slate-300">Persisted event records</span>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${events ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}`}>{events ? 'Loaded' : 'Unavailable'}</span>
+              </li>
             </ul>
           </section>
           <section className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 dark:border-cyan-900/60 dark:bg-cyan-950/20 sm:p-5">
