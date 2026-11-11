@@ -1,0 +1,45 @@
+name: Quality and security checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "feat/enterprise-dashboards-security"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, tests, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      JWT_SECRET: test-only-jwt-secret-that-is-at-least-32-characters
+      EMAIL_OTP_SECRET: test-only-email-otp-secret-of-32-characters-minimum
+      MFA_ENCRYPTION_KEY: test-only-mfa-encryption-key-that-is-separate-and-long
+      APP_URL: https://skillbridge.example.test
+      EMAIL_VERIFICATION_URL: https://skillbridge.example.test/verify-email
+      SUPPORT_EMAIL: support@example.test
+      OTP_FROM_EMAIL: SKILLBRIDGE ET <security@example.test>
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: TypeScript checks
+        run: npm run lint
+      - name: Unit and security tests
+        run: npm test
+      - name: Production frontend build
+        run: npm run build
