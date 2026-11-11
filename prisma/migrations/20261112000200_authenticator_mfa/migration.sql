@@ -27,6 +27,7 @@ CREATE TABLE `auth_mfa_challenges` (
   `id` CHAR(36) NOT NULL,
   `userId` VARCHAR(191) NOT NULL,
   `expiresAt` DATETIME(3) NOT NULL,
+  `attempts` INT UNSIGNED NOT NULL DEFAULT 0,
   `usedAt` DATETIME(3) NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
