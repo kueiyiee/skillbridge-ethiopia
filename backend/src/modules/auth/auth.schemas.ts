@@ -64,13 +64,13 @@ export const mfaEnrollmentSchema = z.object({
   currentPassword: z.string().min(1).max(72),
 });
 export const mfaCodeSchema = z.object({
-  code: z.string().trim().regex(/^\\d{6}$/, 'Enter the current six-digit authenticator code.'),
+  code: z.string().trim().regex(/^\d{6}$/, 'Enter the current six-digit authenticator code.'),
 });
 export const mfaDisableSchema = z.object({
   currentPassword: z.string().min(1).max(72),
-  code: z.string().trim().regex(/^\\d{6}$/, 'Enter the current six-digit authenticator code.'),
+  code: z.string().trim().regex(/^\d{6}$/, 'Enter the current six-digit authenticator code.'),
 });
 export const mfaLoginSchema = z.object({
   challengeId: z.uuid(),
-  code: z.string().trim().min(6).max(32).regex(/^(?:\\d{6}|[A-Fa-f0-9]{20})$/, 'Enter a six-digit authenticator code or one unused recovery code.'),
+  code: z.string().trim().min(6).max(32).regex(/^(?:\d{6}|[A-Fa-f0-9]{20})$/, 'Enter a six-digit authenticator code or one unused recovery code.'),
 });
