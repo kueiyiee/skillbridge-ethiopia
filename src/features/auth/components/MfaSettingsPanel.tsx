@@ -3,7 +3,7 @@ import { CheckCircle2, Copy, KeyRound, LoaderCircle, ShieldCheck, ShieldOff } fr
 import qrcode from 'qrcode-generator';
 import { api } from '@/src/services/api-client';
 
-type MfaStatus = { totpEnabled: boolean; enabledAt: string | null; recoveryCodesRemaining: number; passkeysEnabled: boolean };
+type MfaStatus = { totpEnabled: boolean; enabledAt: string | null; recoveryCodesRemaining: number; };
 
 export const MfaSettingsPanel: React.FC = () => {
   const [status, setStatus] = useState<MfaStatus | null>(null);
