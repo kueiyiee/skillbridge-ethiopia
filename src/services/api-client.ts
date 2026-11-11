@@ -119,6 +119,17 @@ function requireArray<T>(value: unknown, description: string): T[] {
   return value;
 }
 
+export interface PublicReportVerification {
+  reportId: string;
+  reportTitle: string;
+  reportType: string;
+  issuerRole: 'ADMIN' | 'EMPLOYER';
+  generatedAt: string;
+  recordCount: number;
+  reportHash: string;
+  status: 'VALID' | 'REVOKED';
+}
+
 export interface AdminPageResult<T> {
   count: number;
   data: T[];
@@ -344,6 +355,17 @@ export interface AccountProfileUpdate {
 }
 
 export const api = {
+  async verifyIssuedReport(reportId: string): Promise<{ valid: boolean; verification: PublicReportVerification }> {
+    const res = await fetch(`/api/report-verification/${encodeURIComponent(reportId)}`, {
+      credentials: 'same-origin',
+      headers: getHeaders(false),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'Report verification could not be completed');
+    if (!data.verification || typeof data.valid !== 'boolean') throw new Error('The verification service returned an invalid response.');
+    return { valid: data.valid, verification: data.verification as PublicReportVerification };
+  },
+
   async getAccountProfile(): Promise<AccountProfile> {
     const res = await fetch('/api/profile/me', { credentials: 'same-origin', headers: getHeaders(false), cache: 'no-store' });
     const data = await safeJson(res, 'Profile could not be loaded');
