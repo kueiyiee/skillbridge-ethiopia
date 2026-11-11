@@ -120,7 +120,6 @@ export async function getAuthenticatorMfaStatus(userId: string) {
     totpEnabled: Boolean(enabledAt),
     enabledAt: enabledAt ? new Date(enabledAt).toISOString() : null,
     recoveryCodesRemaining: Number(recovery?.rows[0]?.count ?? 0),
-    passkeysEnabled: false,
   };
 }
 
