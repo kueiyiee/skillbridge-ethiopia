@@ -89,7 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRole(authenticatedUser.role);
     if (authenticatedUser.role === 'JOB_SEEKER') await refreshCandidate();
     else if (authenticatedUser.role === 'EMPLOYER') await refreshEmployer();
-    else if (authenticatedUser.role === 'ADMIN') await refreshSystemStatus();
+    else if (authenticatedUser.role === 'ADMIN') {
+      try { setSystemStatus(await api.getSystemStatus()); } catch { setSystemStatus(null); }
+    }
   };
 
   const login = async (email: string, pass: string): Promise<Role | null> => {
