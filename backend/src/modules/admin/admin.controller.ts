@@ -17,6 +17,7 @@ import { getSystemStatus } from '../system/system.service';
 import { getAdminReport } from './admin.reports';
 import { createAdminReportSnapshot, getAdminReportSnapshot } from './admin.reports.cache';
 import { createAdminReportFile } from './admin.reports.export';
+import { issueReportIdentity } from '../report-verification/report-verification.service';
 
 function adminFromRequest(req: Request): AdminActor {
   return { userId: req.user!.userId, fullName: req.user!.fullName };
@@ -71,7 +72,18 @@ export async function exportAdminReportController(req: Request, res: Response) {
     if (!parsed.success) return res.status(400).json({ success: false, error: 'Invalid report export request.' });
     const report = getAdminReportSnapshot(parsed.data.snapshotId, req.user!.userId);
     if (!report) return res.status(404).json({ success: false, error: 'Report preview expired. Generate a new preview before exporting.' });
-    const file = await createAdminReportFile(report, parsed.data.format);
+    const verification = parsed.data.format === 'pdf'
+      ? await issueReportIdentity({
+        issuerUserId: req.user!.userId,
+        issuerRole: 'ADMIN',
+        reportType: report.type,
+        reportTitle: report.title,
+        generatedAt: report.generatedAt,
+        recordCount: report.includedRecords,
+        reportPayload: report,
+      })
+      : undefined;
+    const file = await createAdminReportFile(report, parsed.data.format, verification);
     return res
       .set('Cache-Control', 'no-store, private')
       .set('Content-Type', file.contentType)
