@@ -81,6 +81,10 @@ function totpAtStep(secret: string, step: number): string {
   return String(binary % 1_000_000).padStart(6, '0');
 }
 
+export function generateTotpCode(secretBase32: string, timestampSeconds = Math.floor(Date.now() / 1000)): string {
+  return totpAtStep(secretBase32, Math.floor(timestampSeconds / STEP_SECONDS));
+}
+
 function matchingTotpStep(secret: string, code: string, lastStep: number | null): number | null {
   if (!/^\d{6}$/.test(code)) return null;
   const current = Math.floor(Date.now() / 1000 / STEP_SECONDS);
