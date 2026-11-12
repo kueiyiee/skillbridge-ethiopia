@@ -124,11 +124,12 @@ export async function getEmployerReportExport(
   filters: Pick<EmployerReportQuery, 'startDate' | 'endDate'>,
 ) {
   const employerId = await getVerifiedEmployerId(actor);
-  return readEmployerReport(employerId, type, {
+  const report = await readEmployerReport(employerId, type, {
     ...filters,
     page: 1,
     pageSize: 100,
   }, true);
+  return { ...report, employerId };
 }
 
 export async function updateEmployerApplicationStatus(

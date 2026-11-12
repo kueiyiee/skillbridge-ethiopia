@@ -58,7 +58,7 @@ export const EmployerReportsPage: React.FC<EmployerReportsPageProps> = ({ isVeri
     }
   };
 
-  const exportCsv = async () => {
+  const exportReport = async (format: 'csv' | 'pdf') => {
     setExporting(true);
     setError(null);
     setExportNotice(null);
@@ -66,7 +66,7 @@ export const EmployerReportsPage: React.FC<EmployerReportsPageProps> = ({ isVeri
       const result = await api.exportEmployerReport(reportType, {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-      });
+      }, format);
       const url = URL.createObjectURL(result.blob);
       const link = document.createElement('a');
       link.href = url;
@@ -77,7 +77,7 @@ export const EmployerReportsPage: React.FC<EmployerReportsPageProps> = ({ isVeri
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       setExportNotice(result.truncated
         ? `Downloaded ${result.filename} with ${result.recordCount.toLocaleString()} records (export limit reached). Narrow the date range to include fewer records.`
-        : `Downloaded ${result.filename} with ${result.recordCount.toLocaleString()} records.`);
+        : `Downloaded ${result.filename} with ${result.recordCount.toLocaleString()} records. ${format === 'pdf' ? 'The A4 PDF includes a unique report ID, QR verification link, and barcode reference.' : ''}`);
     } catch (exportError) {
       setError(exportError instanceof Error ? exportError.message : 'CSV export could not be generated.');
     } finally {
@@ -107,7 +107,7 @@ export const EmployerReportsPage: React.FC<EmployerReportsPageProps> = ({ isVeri
       </header>
 
       <form
-        className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1.4fr)_minmax(150px,1fr)_minmax(150px,1fr)_auto_auto]"
+        className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1.4fr)_minmax(150px,1fr)_minmax(150px,1fr)_auto_auto_auto]"
         onSubmit={(event) => { event.preventDefault(); void generatePreview(); }}
       >
         <label className="grid gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -127,8 +127,11 @@ export const EmployerReportsPage: React.FC<EmployerReportsPageProps> = ({ isVeri
         <button type="submit" disabled={loading || loadingTypes} className="self-end inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />{loading ? 'Generating…' : 'Generate preview'}
         </button>
-        <button type="button" onClick={() => void exportCsv()} disabled={exporting || loadingTypes} className="self-end inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200">
+        <button type="button" onClick={() => void exportReport('csv')} disabled={exporting || loadingTypes} className="self-end inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200">
           <Download className="h-4 w-4" aria-hidden="true" />{exporting ? 'Preparing…' : 'Download CSV'}
+        </button>
+        <button type="button" onClick={() => void exportReport('pdf')} disabled={exporting || loadingTypes} className="self-end inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-700 px-4 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400">
+          <FileText className="h-4 w-4" aria-hidden="true" />{exporting ? 'Preparing…' : 'Download A4 PDF'}
         </button>
       </form>
 

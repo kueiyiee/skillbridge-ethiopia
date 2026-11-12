@@ -119,6 +119,17 @@ function requireArray<T>(value: unknown, description: string): T[] {
   return value;
 }
 
+export interface PublicReportVerification {
+  reportId: string;
+  reportTitle: string;
+  reportType: string;
+  issuerRole: 'ADMIN' | 'EMPLOYER';
+  generatedAt: string;
+  recordCount: number;
+  reportHash: string;
+  status: 'VALID' | 'REVOKED';
+}
+
 export interface AdminPageResult<T> {
   count: number;
   data: T[];
@@ -344,6 +355,17 @@ export interface AccountProfileUpdate {
 }
 
 export const api = {
+  async verifyIssuedReport(reportId: string): Promise<{ valid: boolean; verification: PublicReportVerification }> {
+    const res = await fetch(`/api/report-verification/${encodeURIComponent(reportId)}`, {
+      credentials: 'same-origin',
+      headers: getHeaders(false),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'Report verification could not be completed');
+    if (!data.verification || typeof data.valid !== 'boolean') throw new Error('The verification service returned an invalid response.');
+    return { valid: data.valid, verification: data.verification as PublicReportVerification };
+  },
+
   async getAccountProfile(): Promise<AccountProfile> {
     const res = await fetch('/api/profile/me', { credentials: 'same-origin', headers: getHeaders(false), cache: 'no-store' });
     const data = await safeJson(res, 'Profile could not be loaded');
@@ -417,6 +439,60 @@ export const api = {
     const data = await safeJson(res, 'Login failed');
     if (!data.success) throw new Error(data.error || 'Login failed');
     return data;
+  },
+
+  async completeMfaLogin(challengeId: string, code: string) {
+    const res = await fetch('/api/auth/mfa/login/verify', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ challengeId, code }),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'MFA verification failed');
+    if (!data.success) throw new Error(data.error || 'MFA verification failed');
+    return data;
+  },
+
+  async getMfaStatus(): Promise<{ totpEnabled: boolean; enabledAt: string | null; recoveryCodesRemaining: number }> {
+    const res = await fetch('/api/auth/mfa', { headers: getHeaders(false), cache: 'no-store' });
+    const data = await safeJson(res, 'MFA status could not be loaded');
+    return data.data;
+  },
+
+  async beginTotpEnrollment(currentPassword: string): Promise<{ secret: string; otpauthUrl: string; issuer: string; account: string }> {
+    const res = await fetch('/api/auth/mfa/totp/enroll', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ currentPassword }),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'Authenticator enrollment could not be started');
+    return data.data;
+  },
+
+  async confirmTotpEnrollment(code: string): Promise<{ enabled: boolean; recoveryCodes: string[] }> {
+    const res = await fetch('/api/auth/mfa/totp/confirm', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ code }),
+      cache: 'no-store',
+    });
+    const data = await safeJson(res, 'Authenticator could not be verified');
+    return data.data;
+  },
+
+  async disableTotp(currentPassword: string, code: string): Promise<void> {
+    const res = await fetch('/api/auth/mfa/totp/disable', {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'same-origin',
+      body: JSON.stringify({ currentPassword, code }),
+      cache: 'no-store',
+    });
+    await safeJson(res, 'Authenticator MFA could not be disabled');
   },
 
   async requestPasswordReset(email: string): Promise<{ message: string }> {
@@ -844,8 +920,9 @@ export const api = {
   async exportEmployerReport(
     type: EmployerReportType,
     filters: { startDate?: string; endDate?: string } = {},
+    format: 'csv' | 'pdf' = 'csv',
   ): Promise<{ blob: Blob; filename: string; truncated: boolean; recordCount: number }> {
-    const params = new URLSearchParams({ format: 'csv' });
+    const params = new URLSearchParams({ format });
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
@@ -858,7 +935,7 @@ export const api = {
       throw new Error(payload?.error || 'Employer report export failed. Please retry.');
     }
     const disposition = res.headers.get('content-disposition') || '';
-    const filename = disposition.match(/filename="([^"]+)"/i)?.[1] || `skillbridge-employer-${type}.csv`;
+    const filename = disposition.match(/filename="([^"]+)"/i)?.[1] || `SKILLBRIDGE_ET_Employer_${type}.${format}`;
     return {
       blob: await res.blob(),
       filename,
@@ -1121,6 +1198,16 @@ export const api = {
     });
     const data = await safeJson(res, 'Get verifications failed');
     return { count: data.count, data: data.data || [], page: data.page, pageSize: data.pageSize, totalPages: data.totalPages };
+  },
+
+  async getAdminMfaAdoptionSummary(): Promise<Array<{ role: string; totalAccounts: number; mfaEnabled: number }>> {
+    const res = await fetch('/api/admin/security/mfa-summary', {
+      headers: getHeaders(false),
+      cache: 'no-store',
+      signal: adminRequestTimeout(),
+    });
+    const data = await safeJson(res, 'MFA adoption summary could not be loaded');
+    return data.data ?? [];
   },
 
   async getAdminEmployerVerificationSummary(): Promise<AdminEmployerVerificationSummary> {

@@ -4,6 +4,13 @@ Base path: `/api`. The frontend uses same-origin requests through `src/services/
 
 Status codes below describe intended handler behavior. Validation failures generally return `400`, missing records `404`, unauthenticated requests `401`/`403`, and unexpected or unavailable database/service operations `500`/`503`.
 
+| `GET /api/auth/mfa` | Authenticated | Returns the current account's TOTP MFA status and remaining recovery-code count. |
+| `POST /api/auth/mfa/totp/enroll` | Authenticated + current password | Creates an encrypted pending TOTP enrollment and returns the one-time setup URI/secret. |
+| `POST /api/auth/mfa/totp/confirm` | Authenticated | Verifies the authenticator code, enables MFA, and returns one-time recovery codes. |
+| `POST /api/auth/mfa/totp/disable` | Authenticated + current password + TOTP | Disables TOTP after password and current authenticator-code verification. |
+| `POST /api/auth/mfa/login/verify` | Public, rate-limited | Completes a short-lived password-verified MFA challenge using TOTP or one unused recovery code. |
+| `GET /api/report-verification/:reportId` | Public, rate-limited | Returns limited issuance metadata, current validity status, and the report-data SHA-256 fingerprint. Does not return report rows or private employer data. |
+
 ## Health and system
 
 | Method and path | Access | Request, persistence, and response |

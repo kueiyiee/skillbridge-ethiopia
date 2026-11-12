@@ -47,5 +47,5 @@ export const employerReportTypeSchema = z.enum([
 ]);
 
 export const employerReportExportQuerySchema = orderedReportDates(reportDateSchema.extend({
-  format: z.enum(['csv']).default('csv'),
+  format: z.enum(['csv', 'pdf']).default('csv'),
 }));

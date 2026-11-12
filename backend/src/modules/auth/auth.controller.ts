@@ -8,10 +8,14 @@ import {
   registerSchema,
   requestEmailVerificationSchema,
   verifyEmailCodeSchema,
+  mfaEnrollmentSchema,
+  mfaCodeSchema,
+  mfaDisableSchema,
+  mfaLoginSchema,
 } from './auth.schemas';
 import {
   changePassword, deleteAccount, getCurrentAccount, login, readEmailVerificationStatus,
-  register, requestRegistrationEmailVerification, resendRegistrationCode, revokeSession, updateAccount, verifyRegistrationCode
+  register, requestRegistrationEmailVerification, resendRegistrationCode, revokeSession, updateAccount, verifyRegistrationCode, completeMfaLogin
 } from './auth.service';
 import {
   clearEmailVerificationCookie, clearSessionCookie, getEmailVerificationToken,
@@ -24,6 +28,7 @@ import {
   maskEmailAddress,
 } from './email-verification.service';
 import { assertEmailDeliveryConfigured, sendVerificationEmail } from './auth.email';
+import { beginAuthenticatorEnrollment, confirmAuthenticatorEnrollment, disableAuthenticatorMfa, getAuthenticatorMfaStatus } from './mfa.service';
 
 function requestId(req: Request): string {
   return String(req.headers['x-request-id'] ?? '');
@@ -221,9 +226,67 @@ export async function loginController(req: Request, res: Response) {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ success: false, error: 'Invalid email/username or password.' });
     const result = await login(parsed.data);
+    if (result.mfaRequired) {
+      clearSessionCookie(res);
+      return res.set('Cache-Control', 'no-store').json({ success: true, mfaRequired: true, challengeId: result.challengeId, user: result.user });
+    }
     setSessionCookie(res, result.token);
     const { token: _token, ...response } = result;
     return res.set('Cache-Control', 'no-store').json({ success: true, ...response });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function completeMfaLoginController(req: Request, res: Response) {
+  try {
+    const parsed = mfaLoginSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, error: 'Invalid MFA challenge or code.' });
+    const result = await completeMfaLogin(parsed.data.challengeId, parsed.data.code);
+    setSessionCookie(res, result.token);
+    const { token: _token, ...response } = result;
+    return res.set('Cache-Control', 'no-store').json({ success: true, ...response });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function mfaStatusController(req: Request, res: Response) {
+  try {
+    return res.set('Cache-Control', 'no-store').json({ success: true, data: await getAuthenticatorMfaStatus(req.user!.userId) });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function beginMfaEnrollmentController(req: Request, res: Response) {
+  try {
+    const parsed = mfaEnrollmentSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, error: 'Current password is required.' });
+    const enrollment = await beginAuthenticatorEnrollment(req.user!.userId, req.user!.email, parsed.data.currentPassword);
+    return res.set('Cache-Control', 'no-store').json({ success: true, data: enrollment });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function confirmMfaEnrollmentController(req: Request, res: Response) {
+  try {
+    const parsed = mfaCodeSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, error: 'Enter the six-digit authenticator code.' });
+    const result = await confirmAuthenticatorEnrollment(req.user!.userId, parsed.data.code);
+    return res.set('Cache-Control', 'no-store').json({ success: true, data: result });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function disableMfaController(req: Request, res: Response) {
+  try {
+    const parsed = mfaDisableSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, error: 'Current password and a six-digit authenticator code are required.' });
+    const result = await disableAuthenticatorMfa(req.user!.userId, parsed.data.currentPassword, parsed.data.code);
+    return res.set('Cache-Control', 'no-store').json({ success: true, data: result });
   } catch (error) {
     return handleError(res, error);
   }

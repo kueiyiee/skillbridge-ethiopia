@@ -15,6 +15,11 @@ import {
   registerController,
   updateAccountController,
   verifyEmailController,
+  completeMfaLoginController,
+  mfaStatusController,
+  beginMfaEnrollmentController,
+  confirmMfaEnrollmentController,
+  disableMfaController,
 } from './auth.controller';
 import {
   forgotPasswordController,
@@ -30,6 +35,8 @@ const emailVerificationStore = new MysqlRateLimitStore(db.query.bind(db), rateLi
 emailVerificationStore.prefix = 'mysql-email-verification:';
 const emailCodeAttemptStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
 emailCodeAttemptStore.prefix = 'mysql-email-verification-attempt:';
+const mfaChallengeStore = new MysqlRateLimitStore(db.query.bind(db), rateLimitSecret);
+mfaChallengeStore.prefix = 'mysql-mfa-challenge:';
 
 const passwordChangeLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -47,6 +54,14 @@ const emailVerificationLimit = rateLimit({
   store: emailVerificationStore,
   message: { success: false, error: 'Too many verification code requests. Please try again later.' }
 });
+const mfaChallengeLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  store: mfaChallengeStore,
+  message: { success: false, error: 'Too many MFA verification attempts. Sign in again later.' },
+});
 const emailCodeAttemptLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 12,
@@ -58,6 +73,7 @@ const emailCodeAttemptLimit = rateLimit({
 
 router.post('/register', registerController);
 router.post('/login', loginController);
+router.post('/mfa/login/verify', mfaChallengeLimit, completeMfaLoginController);
 router.post('/forgot-password', forgotPasswordController);
 router.post('/resend-reset-otp', resendPasswordResetController);
 router.post('/reset-password', resetPasswordController);
@@ -65,6 +81,10 @@ router.get('/email-verification', emailVerificationStatusController);
 router.post('/email-verification/request', emailVerificationLimit, requestEmailVerificationController);
 router.post('/email-verification/resend', emailVerificationLimit, resendEmailVerificationController);
 router.post('/email-verification/verify', emailCodeAttemptLimit, verifyEmailController);
+router.get('/mfa', authenticateToken, mfaStatusController);
+router.post('/mfa/totp/enroll', passwordChangeLimit, authenticateToken, beginMfaEnrollmentController);
+router.post('/mfa/totp/confirm', emailCodeAttemptLimit, authenticateToken, confirmMfaEnrollmentController);
+router.post('/mfa/totp/disable', passwordChangeLimit, authenticateToken, disableMfaController);
 router.get('/me', optionalAuth, currentAccountController);
 router.patch('/me', authenticateToken, updateAccountController);
 router.post('/change-password', passwordChangeLimit, authenticateToken, changePasswordController);

@@ -19,7 +19,9 @@ export const expectedMigrationNames = [
   '20261023000500_email_verification_evidence',
   '20261025000100_application_messaging',
   '20261025000200_employer_recruitment_workflow',
-  '20261026000100_candidate_skill_assessments'
+  '20261026000100_candidate_skill_assessments',
+  '20261112000100_verified_report_registry',
+  '20261112000200_authenticator_mfa'
 ];
 
 const migrations = expectedMigrationNames.map((name) => ({

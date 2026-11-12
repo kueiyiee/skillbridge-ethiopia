@@ -35,7 +35,7 @@ const errorText = (error: unknown) => {
 };
 
 export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNavigate }) => {
-  const { login, register } = useAuth();
+  const { login, register, completeMfaLogin } = useAuth();
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [selectedRole, setSelectedRole] = useState<RegistrationRole>('JOB_SEEKER');
   const [email, setEmail] = useState('');
@@ -49,13 +49,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
   const [verificationPending, setVerificationPending] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
+  const [mfaPending, setMfaPending] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
 
   useEffect(() => {
     setIsLogin(initialMode === 'login');
+    setMfaPending(false);
+    setMfaCode('');
   }, [initialMode]);
 
   const switchMode = (nextIsLogin: boolean) => {
     setIsLogin(nextIsLogin);
+    setMfaPending(false);
+    setMfaCode('');
     setErrorMessage(null);
     setVerificationPending(false);
     setNeedsVerification(false);
@@ -89,8 +95,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
 
     setLoading(true);
     try {
-      if (isLogin) {
+      if (isLogin && mfaPending) {
+        const authenticatedRole = await completeMfaLogin(mfaCode.trim());
+        onNavigate(dashboardForRole(authenticatedRole));
+      } else if (isLogin) {
         const authenticatedRole = await login(email.trim(), password);
+        if (authenticatedRole === null) {
+          setMfaPending(true);
+          setErrorMessage('Your password was accepted. Enter the current authenticator code or an unused recovery code to finish signing in.');
+          return;
+        }
         onNavigate(dashboardForRole(authenticatedRole));
       } else {
         await register({
@@ -153,10 +167,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
           <div className="w-full">
           <div className="mb-6">
             <h1 className="auth-heading text-2xl font-bold tracking-tight sm:text-3xl">
-              {isLogin ? 'Welcome back' : 'Create your account'}
+              {mfaPending ? 'Verify your identity' : isLogin ? 'Welcome back' : 'Create your account'}
             </h1>
             <p className="auth-copy mt-2 text-sm leading-6">
-              {isLogin ? 'Sign in to continue to your SKILLBRIDGE account.' : 'Create an account to find or share opportunities.'}
+              {mfaPending ? 'Complete the second authentication step to access your account.' : isLogin ? 'Sign in to continue to your SKILLBRIDGE account.' : 'Create an account to find or share opportunities.'}
             </p>
           </div>
 
@@ -164,14 +178,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
             <button
               type="button"
               aria-pressed={isLogin}
-              disabled={loading}
+              disabled={loading || mfaPending}
               onClick={() => switchMode(true)}
               className="min-h-11 rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus disabled:cursor-not-allowed"
             >Sign In</button>
             <button
               type="button"
               aria-pressed={!isLogin}
-              disabled={loading}
+              disabled={loading || mfaPending}
               onClick={() => switchMode(false)}
               className="min-h-11 rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-focus disabled:cursor-not-allowed"
             >Create Account</button>
@@ -260,6 +274,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
               </div>
             )}
 
+            {mfaPending && (
+              <div className="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-900 dark:bg-cyan-950/30">
+                <p className="text-sm font-semibold text-cyan-950 dark:text-cyan-100">Two-factor authentication</p>
+                <p className="text-xs leading-5 text-cyan-900 dark:text-cyan-200">Open your authenticator app and enter its current six-digit code. You may also enter one unused recovery code.</p>
+                <label htmlFor="auth-mfa-code" className="auth-label block text-sm font-semibold">Authenticator or recovery code</label>
+                <input id="auth-mfa-code" type="text" inputMode="text" autoComplete="one-time-code" autoFocus required maxLength={32} value={mfaCode} onChange={(event) => setMfaCode(event.target.value.replace(/\s/g, '').slice(0, 32))} placeholder="123456" className="auth-input text-center font-mono text-lg tracking-[0.3em]" />
+                <button type="button" onClick={() => { setMfaPending(false); setMfaCode(''); setErrorMessage(null); }} className="text-xs font-semibold text-cyan-800 underline underline-offset-4 dark:text-cyan-200">Return to password sign-in</button>
+              </div>
+            )}
+            {!mfaPending && (
+              <>
             <div className="space-y-1.5">
               <label htmlFor="auth-email" className="auth-label block text-sm font-semibold">{isLogin ? 'Email or username' : 'Email address'}</label>
               <div className="relative">
@@ -317,6 +342,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
               {!isLogin && <p id="auth-password-help" className="auth-muted text-xs">Use at least 8 characters. Passwords are kept private.</p>}
             </div>
 
+              </>
+            )}
+
             {!isLogin && (
               <>
                 <div className="space-y-1.5">
@@ -354,7 +382,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login', onNav
               className="auth-primary-button w-full"
             >
               {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/25 border-t-current" aria-hidden="true" /> : null}
-              <span>{loading ? (isLogin ? 'Signing in...' : 'Creating account...') : (isLogin ? 'Sign In' : 'Create Account')}</span>
+              <span>{loading ? (mfaPending ? 'Verifying…' : isLogin ? 'Signing in...' : 'Creating account...') : (mfaPending ? 'Verify & Sign In' : isLogin ? 'Sign In' : 'Create Account')}</span>
               {!loading && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </button>
           </form>

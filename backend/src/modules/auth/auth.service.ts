@@ -23,6 +23,7 @@ import {
 import type { ExistingRegistration } from './auth.repository';
 import type { AccountUpdateInput, AuthActor, AuthDatabaseUser, ChangePasswordInput, LoginInput, RegisterInput } from './auth.types';
 import { AuthError } from './auth.errors';
+import { createLoginMfaChallenge, getAuthenticatorMfaStatus, verifyLoginMfaChallenge } from './mfa.service';
 import {
   createEmailVerificationChallenge,
   createEmailVerificationDecoy,
@@ -134,12 +135,38 @@ export async function login(input: LoginInput) {
   if (!user.isActive) throw new AuthError('This account has been suspended. Please contact platform administrators.', 403);
 
   const institutionOrCompany = await getInstitutionOrCompany(user.id, user.role);
+  const account = {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role,
+    emailVerified: user.emailVerified,
+    institutionOrCompany,
+  };
+  const mfa = await getAuthenticatorMfaStatus(user.id);
+  if (mfa.totpEnabled) {
+    const challengeId = await createLoginMfaChallenge(user.id);
+    return { mfaRequired: true as const, challengeId, user: account };
+  }
   const token = generateToken({
     userId: user.id,
     email: user.email,
     role: user.role,
     fullName: user.fullName,
     authVersion: user.authVersion ?? 0
+  });
+  return { mfaRequired: false as const, token, user: account };
+}
+
+export async function completeMfaLogin(challengeId: string, code: string) {
+  const user = await verifyLoginMfaChallenge(challengeId, code);
+  const institutionOrCompany = await getInstitutionOrCompany(user.id, user.role);
+  const token = generateToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    fullName: user.fullName,
+    authVersion: user.authVersion ?? 0,
   });
   return {
     token,

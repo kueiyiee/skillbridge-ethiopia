@@ -30,6 +30,9 @@ The Render service is named `skillbridge-api` in `render.yaml`, which gives it t
    - `JWT_SECRET`: unique random secret, at least 32 characters.
    - `EMAIL_OTP_SECRET`: a different unique random secret, at least 32 characters.
    - `OPENAI_API_KEY` and/or `GEMINI_API_KEY`: server-side AI provider keys. The AI feature can be unconfigured, but it will not generate responses without a provider key.
+   - `MFA_ENCRYPTION_KEY`: separate high-entropy server secret (at least 32 characters) used to encrypt TOTP seeds. Generate independently from `JWT_SECRET`; never expose it to the frontend.
+   - `APP_URL` must be the valid public application origin (HTTPS in production). Employer and Admin A4 PDF reports use it to generate direct QR verification links.
+   - Run `npm run db:migrate` after deploying the release that introduces the issued-report registry and authenticator MFA tables. The migration is additive and creates the report verification registry table.
    - `RESEND_API_KEY`, `OTP_FROM_EMAIL`, `APP_URL`, and `EMAIL_VERIFICATION_URL`: configure these for production email verification and password recovery. Set the two URL values to the public Vercel application origin and its `/verify-email` route respectively.
    - Any other integration variables required by your selected features (for example `SUPPORT_EMAIL`, `AI_PRIMARY_PROVIDER`, and `AI_FALLBACK_PROVIDER`).
 5. Confirm Render's generated public URL is `https://skillbridge-api.onrender.com`. If it differs, update the Vercel rewrite as described above.

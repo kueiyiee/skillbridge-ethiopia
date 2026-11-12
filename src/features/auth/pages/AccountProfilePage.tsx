@@ -5,6 +5,7 @@ import { useAuth } from '@/src/app/providers/AuthContext';
 import { api, type AccountProfile, type AccountProfileUpdate } from '@/src/services/api-client';
 import { BackButton } from '@/src/components/navigation/BackButton';
 import { PasswordChangeForm } from '@/src/features/auth/components/PasswordChangeForm';
+import { MfaSettingsPanel } from '@/src/features/auth/components/MfaSettingsPanel';
 
 const imageMaxBytes = 2 * 1024 * 1024;
 const phonePrefixes = ['+251', '+1', '+44', '+91', '+254', '+971'];
@@ -484,8 +485,9 @@ export const AccountProfilePage: React.FC = () => {
           </form>
           )}
 
-          {activeSection === 'security' && <Section id="security" title="Security" description="Change your password and review security guidance for your account.">
+          {activeSection === 'security' && <Section id="security" title="Security" description="Manage your password and authenticator-based two-factor sign-in protection.">
             <PasswordChangeForm />
+            <MfaSettingsPanel />
           </Section>}
 
           {activeSection === 'account-actions' && <section className="rounded-2xl border border-rose-200 bg-white p-4 dark:border-rose-900/70 dark:bg-slate-900 sm:p-5" aria-labelledby="settings-sign-out-title">

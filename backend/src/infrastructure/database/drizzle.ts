@@ -17,6 +17,10 @@ export function identifyDatabaseEngine(version: string): string {
 const applicationTables = [
   'users',
   'email_verification_challenges',
+  'user_mfa_factors',
+  'user_mfa_recovery_codes',
+  'auth_mfa_challenges',
+  'issued_reports',
   'password_reset_challenges',
   'job_seeker_profiles',
   'employer_profiles',
