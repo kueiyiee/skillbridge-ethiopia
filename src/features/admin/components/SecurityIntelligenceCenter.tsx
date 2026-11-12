@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Activity, ArrowUpRight, Clock3, Database, Fingerprint, KeyRound, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowUpRight, Clock, Database, Lock, ShieldCheck } from 'lucide-react';
 import { api } from '@/src/services/api-client';
 
 export interface SecurityAuditEvent {
@@ -66,7 +66,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
       label: 'Security-related events',
       value: events ? securityEvents.length.toLocaleString() : '—',
       detail: 'Keyword-filtered from the loaded audit page',
-      icon: ShieldAlert,
+      icon: AlertTriangle,
     },
     {
       label: 'Database connectivity',
@@ -84,7 +84,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
       label: 'Accounts with MFA',
       value: mfaSummary ? `${mfaEnabled.toLocaleString()} / ${mfaTotal.toLocaleString()}` : '—',
       detail: mfaSummary ? 'Enabled TOTP across active accounts' : 'MFA adoption data unavailable',
-      icon: KeyRound,
+      icon: Lock,
     },
   ];
 
@@ -146,7 +146,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
               {securityEvents.slice(0, 10).map((event) => (
                 <article key={event.id} className="flex flex-wrap items-start justify-between gap-3 px-4 py-3.5 sm:px-5">
                   <div className="flex min-w-0 items-start gap-3">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-200"><Fingerprint className="h-4 w-4" aria-hidden="true" /></span>
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-200"><ShieldCheck className="h-4 w-4" aria-hidden="true" /></span>
                     <div className="min-w-0">
                       <p className="break-words text-xs font-bold text-slate-900 dark:text-white">{event.action.replaceAll('_', ' ')}</p>
                       <p className="mt-1 break-words text-[11px] text-slate-500 dark:text-slate-400">
@@ -155,7 +155,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
                       {event.details && <p className="mt-1.5 line-clamp-2 break-words text-[11px] leading-4 text-slate-600 dark:text-slate-300">{event.details}</p>}
                     </div>
                   </div>
-                  <p className="inline-flex shrink-0 items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><Clock3 className="h-3 w-3" aria-hidden="true" />{formatDate(event.createdAt)}</p>
+                  <p className="inline-flex shrink-0 items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400"><Clock className="h-3 w-3" aria-hidden="true" />{formatDate(event.createdAt)}</p>
                 </article>
               ))}
             </div>
@@ -196,7 +196,7 @@ export const SecurityIntelligenceCenter: React.FC<SecurityIntelligenceCenterProp
             ) : <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">MFA adoption data is unavailable.</p>}
           </section>
           <section className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 dark:border-cyan-900/60 dark:bg-cyan-950/20 sm:p-5">
-            <div className="flex items-center gap-2 text-cyan-900 dark:text-cyan-200"><ShieldAlert className="h-4 w-4" /><h3 className="text-xs font-bold">Monitoring scope</h3></div>
+            <div className="flex items-center gap-2 text-cyan-900 dark:text-cyan-200"><AlertTriangle className="h-4 w-4" /><h3 className="text-xs font-bold">Monitoring scope</h3></div>
             <p className="mt-2 text-xs leading-5 text-cyan-950/80 dark:text-cyan-100/80">
               This first release visualizes existing audit records and service diagnostics. It is not a SIEM, intrusion-detection engine, vulnerability scanner, or proof of security certification.
             </p>

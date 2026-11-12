@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Copy, KeyRound, LoaderCircle, ShieldCheck, ShieldOff } from 'lucide-react';
+import { CheckCircle2, Copy, Lock, RefreshCw, Shield, ShieldCheck } from 'lucide-react';
 import qrcode from 'qrcode-generator';
 import { api } from '@/src/services/api-client';
 
@@ -106,7 +106,7 @@ export const MfaSettingsPanel: React.FC = () => {
           <h3 id="mfa-settings-title" className="text-sm font-bold text-slate-950 dark:text-white">Two-factor authentication</h3>
           <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">Add a time-based one-time password from an authenticator app. The server stores an encrypted secret and never receives biometric data.</p>
         </div>
-        {loading ? <LoaderCircle className="h-4 w-4 animate-spin text-slate-500"/> : status?.totpEnabled ? <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Enabled</span> : <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-200">Not enabled</span>}
+        {loading ? <RefreshCw className="h-4 w-4 animate-spin text-slate-500"/> : status?.totpEnabled ? <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Enabled</span> : <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-200">Not enabled</span>}
       </div>
 
       {message && <p className={`mt-4 rounded-lg border px-3 py-2 text-xs leading-5 ${message.kind === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200'}`} role="status">{message.text}</p>}
@@ -120,7 +120,7 @@ export const MfaSettingsPanel: React.FC = () => {
           <form onSubmit={disable} className="grid gap-3 sm:grid-cols-[1fr_180px_auto]">
             <input type="password" required autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Current password" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
             <input type="text" required inputMode="text" autoComplete="one-time-code" maxLength={32} value={code} onChange={(event) => setCode(event.target.value.replace(/\s/g, '').slice(0, 32))} placeholder="Authenticator or recovery code" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-mono tracking-widest dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
-            <button type="submit" disabled={working || ![6, 20].includes(code.trim().length) || !currentPassword} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-300 px-3 text-xs font-semibold text-rose-800 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300"><ShieldOff className="h-4 w-4"/>{working ? 'Working…' : 'Disable MFA'}</button>
+            <button type="submit" disabled={working || ![6, 20].includes(code.trim().length) || !currentPassword} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-300 px-3 text-xs font-semibold text-rose-800 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300"><Shield className="h-4 w-4"/>{working ? 'Working…' : 'Disable MFA'}</button>
           </form>
         </div>
       )}
@@ -128,7 +128,7 @@ export const MfaSettingsPanel: React.FC = () => {
       {!loading && !status?.totpEnabled && !enrollment && (
         <form onSubmit={startEnrollment} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
           <input type="password" required autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Confirm your current password" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
-          <button type="submit" disabled={working || !currentPassword} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-xs font-semibold text-white disabled:opacity-50 dark:bg-cyan-500 dark:text-slate-950"><KeyRound className="h-4 w-4"/>{working ? 'Preparing…' : 'Set up authenticator'}</button>
+          <button type="submit" disabled={working || !currentPassword} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-xs font-semibold text-white disabled:opacity-50 dark:bg-cyan-500 dark:text-slate-950"><Lock className="h-4 w-4"/>{working ? 'Preparing…' : 'Set up authenticator'}</button>
         </form>
       )}
 

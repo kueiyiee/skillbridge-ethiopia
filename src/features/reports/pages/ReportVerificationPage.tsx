@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, BadgeCheck, Copy, LoaderCircle, ShieldCheck, ShieldX } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Copy, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
 import { api, type PublicReportVerification } from '@/src/services/api-client';
 
 export const ReportVerificationPage: React.FC = () => {
@@ -47,7 +47,7 @@ export const ReportVerificationPage: React.FC = () => {
             <p className="mt-2 text-sm text-slate-300">Check whether this report reference was issued by SKILLBRIDGE Ethiopia.</p>
           </header>
           <div className="p-6 sm:p-8">
-            {loading && <div className="flex items-center gap-3 py-12 text-sm text-slate-600 dark:text-slate-300" role="status"><LoaderCircle className="h-5 w-5 animate-spin" /> Checking the official report registry…</div>}
+            {loading && <div className="flex items-center gap-3 py-12 text-sm text-slate-600 dark:text-slate-300" role="status"><RefreshCw className="h-5 w-5 animate-spin" /> Checking the official report registry…</div>}
             {!loading && error && (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100" role="alert">
                 <div className="flex items-center gap-2 font-bold"><AlertTriangle className="h-5 w-5" /> Verification unavailable</div>
@@ -58,7 +58,7 @@ export const ReportVerificationPage: React.FC = () => {
             {!loading && result && (
               <>
                 <div className={`flex items-start gap-4 rounded-2xl border p-5 ${result.valid ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30' : 'border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/30'}`}>
-                  {result.valid ? <ShieldCheck className="mt-0.5 h-7 w-7 shrink-0 text-emerald-700 dark:text-emerald-300" /> : <ShieldX className="mt-0.5 h-7 w-7 shrink-0 text-rose-700 dark:text-rose-300" />}
+                  {result.valid ? <ShieldCheck className="mt-0.5 h-7 w-7 shrink-0 text-emerald-700 dark:text-emerald-300" /> : <XCircle className="mt-0.5 h-7 w-7 shrink-0 text-rose-700 dark:text-rose-300" />}
                   <div>
                     <h2 className={`text-lg font-bold ${result.valid ? 'text-emerald-950 dark:text-emerald-100' : 'text-rose-950 dark:text-rose-100'}`}>{result.valid ? 'Issued report record found' : 'This report has been revoked'}</h2>
                     <p className={`mt-1 text-sm leading-6 ${result.valid ? 'text-emerald-900 dark:text-emerald-200' : 'text-rose-900 dark:text-rose-200'}`}>{result.valid ? 'The reference exists in the official SKILLBRIDGE ET registry and is currently marked valid.' : 'The reference exists, but the issuer has revoked this report record. Do not accept it as a currently valid report.'}</p>
@@ -84,7 +84,7 @@ export const ReportVerificationPage: React.FC = () => {
             )}
           </div>
           <footer className="flex items-center justify-between border-t border-slate-100 px-6 py-4 dark:border-slate-800 sm:px-8">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500"><BadgeCheck className="h-4 w-4"/> SKILLBRIDGE ET</span>
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500"><CheckCircle2 className="h-4 w-4"/> SKILLBRIDGE ET</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Official verification</span>
           </footer>
         </section>
