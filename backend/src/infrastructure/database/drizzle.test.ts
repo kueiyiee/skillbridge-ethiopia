@@ -30,15 +30,19 @@ test('identifies the actual MySQL-compatible database engine', () => {
 });
 
 test('recent migrations preserve security and feature ordering', () => {
-  assert.equal(expectedMigrationNames.at(-9), '20261022000200_email_otp_verification');
-  assert.equal(expectedMigrationNames.at(-8), '20261023000100_shared_login_rate_limits');
-  assert.equal(expectedMigrationNames.at(-7), '20261023000200_admin_email_verification');
-  assert.equal(expectedMigrationNames.at(-6), '20261023000300_employer_verification_documents');
-  assert.equal(expectedMigrationNames.at(-5), '20261023000400_password_reset_security');
-  assert.equal(expectedMigrationNames.at(-4), '20261023000500_email_verification_evidence');
-  assert.equal(expectedMigrationNames.at(-3), '20261025000100_application_messaging');
-  assert.equal(expectedMigrationNames.at(-2), '20261025000200_employer_recruitment_workflow');
-  assert.equal(expectedMigrationNames.at(-1), '20261026000100_candidate_skill_assessments');
+  assert.deepEqual(expectedMigrationNames.slice(-11), [
+    '20261022000200_email_otp_verification',
+    '20261023000100_shared_login_rate_limits',
+    '20261023000200_admin_email_verification',
+    '20261023000300_employer_verification_documents',
+    '20261023000400_password_reset_security',
+    '20261023000500_email_verification_evidence',
+    '20261025000100_application_messaging',
+    '20261025000200_employer_recruitment_workflow',
+    '20261026000100_candidate_skill_assessments',
+    '20261112000100_verified_report_registry',
+    '20261112000200_authenticator_mfa',
+  ]);
 });
 
 test('candidate skill assessment migration persists questions and attempt responses', async () => {
@@ -81,7 +85,7 @@ test('registered password reset migration adds the auth version required by logi
 
 test('registered application messaging migration stores scoped, readable conversations', async () => {
   const migrationName = '20261025000100_application_messaging';
-  assert.equal(expectedMigrationNames.at(-3), migrationName);
+  assert.equal(expectedMigrationNames.at(-5), migrationName);
 
   const migrationSql = await readFile(
     new URL(`../../../../prisma/migrations/${migrationName}/migration.sql`, import.meta.url),
@@ -97,7 +101,7 @@ test('registered application messaging migration stores scoped, readable convers
 
 test('registered recruitment workflow migration adds shortlist/hired stages and private, idempotent batch delivery', async () => {
   const migrationName = '20261025000200_employer_recruitment_workflow';
-  assert.equal(expectedMigrationNames.at(-2), migrationName);
+  assert.equal(expectedMigrationNames.at(-4), migrationName);
   const migrationSql = await readFile(
     new URL(`../../../../prisma/migrations/${migrationName}/migration.sql`, import.meta.url),
     'utf8',
